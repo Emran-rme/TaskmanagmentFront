@@ -1,4 +1,5 @@
 export interface User {
+  contextRequired?: boolean;
   assignable?: boolean;
   companyPermissions?: Record<string, string[]>;
   managedCompanies?: string[];

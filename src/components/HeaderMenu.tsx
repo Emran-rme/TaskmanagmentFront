@@ -84,9 +84,17 @@ export default function HeaderMenu({
           <div className="mb-2 border-b border-slate-100 px-3 py-3 dark:border-slate-700">
             <p className="font-bold">{user?.name}</p>
             <p className="mt-1 text-xs text-slate-500">
+              {({ Admin: "مدیر سامانه", Manager: "مدیر", Member: "کارشناس", Viewer: "مشاهده‌گر" } as Record<string, string>)[user?.role || ""]}
+              {" · "}{user?.company === "*" ? "کل گروه" : user?.company}
+            </p>
+            <p className="mt-1 text-xs text-slate-500">
               {jalali(iso(new Date()))}
             </p>
           </div>
+          <Link className={row} to="/select-context">
+            <UserRound size={18} />
+            تغییر نقش و شرکت
+          </Link>
           {canVisit(user, "/tasks/new") && (
             <Link className={row + " font-bold text-brand"} to="/tasks/new">
               <Plus size={18} />

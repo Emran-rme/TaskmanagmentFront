@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { useMutateMutation, signedIn, errorText } from "../store";
+import { api, useMutateMutation, signedIn, errorText } from "../store";
 import { Card, Field, input, button, ErrorBox } from "../components/ui";
 import ThemeToggle from "../components/ThemeToggle";
 import Brand from "../components/Brand";
@@ -37,8 +37,9 @@ export default function Login() {
                 url: "auth/login",
                 body: Object.fromEntries(f),
               }).unwrap();
+              dispatch(api.util.resetApiState());
               dispatch(signedIn(result));
-              navigate("/");
+              navigate(result.user.contextRequired ? "/select-context" : "/", { replace: true });
             } catch (err) {
               setError(errorText(err));
             }

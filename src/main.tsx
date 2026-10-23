@@ -8,6 +8,7 @@ import { Loading } from "./components/ui";
 import "./index.css";
 if ("serviceWorker" in navigator)
   navigator.serviceWorker.register("/sw.js").catch(console.error);
+const ContextSelect = lazy(() => import("./pages/ContextSelect"));
 const Organization = lazy(() => import("./pages/Organization"));
 const PersonalTodos = lazy(() => import("./pages/PersonalTodos"));
 const Master = lazy(() => import("./pages/Master"));
@@ -27,16 +28,22 @@ const Login = lazy(() => import("./pages/Login")),
   Modules = lazy(() => import("./pages/Modules")),
   Trash = lazy(() => import("./pages/Trash"));
 function Protected() {
+  const { token, user } = useSelector((s: RootState) => s.auth);
+  if (!token) return <Navigate to="/login" replace />;
+  if (user?.contextRequired) return <Navigate to="/select-context" replace />;
+  return <Layout />;
+}
+function ContextRoute() {
   const token = useSelector((s: RootState) => s.auth.token);
-  return token ? <Layout /> : <Navigate to="/login" replace />;
+  return token ? <ContextSelect /> : <Navigate to="/login" replace />;
 }
 function App() {
   return (
     <Suspense fallback={<Loading />}>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="select-context" element={<ContextRoute />} />
         <Route element={<Protected />}>
-          <Route path="select-context" element={<Navigate to="/" replace />} />
           <Route path="organization" element={<Organization />} />
           <Route path="master" element={<Master />} />
           <Route path="projects/:projectId/*" element={<ProjectWorkspace />} />
