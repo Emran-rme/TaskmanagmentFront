@@ -25,6 +25,7 @@ import {
 } from "../components/ui";
 import Modal from "../components/Modal";
 import DefinitionPicker from "../components/DefinitionPicker";
+import OrganizationTreeSelect from "../components/OrganizationTreeSelect";
 import PersonPicker from "../components/PersonPicker";
 import MultiPersonPicker from "../components/MultiPersonPicker";
 import JalaliDatePicker from "../components/JalaliDatePicker";
@@ -81,6 +82,22 @@ export default function TaskForm() {
     return <ErrorBox message="پروژه یافت نشد یا مجوز ثبت وظیفه ندارید." />;
   if (!can(user, "tasks.write", taskCompany))
     return <ErrorBox message="مجوز ثبت وظیفه ندارید." />;
+  const organization = w.organization?.length
+    ? w.organization
+    : w.companies.map((name) => ({
+        id: name,
+        name,
+        type: "شرکت تابعه",
+        parentId: null,
+      }));
+  const companyIds = organization
+    .filter(
+      (node) =>
+        ["شرکت مادر", "شرکت تابعه"].includes(node.type) &&
+        w.companies.includes(node.name) &&
+        can(user, "tasks.write", node.name),
+    )
+    .map((node) => node.id);
   const assignees = w.users.filter(
     (person) =>
       person.enabled !== false &&
@@ -190,28 +207,25 @@ export default function TaskForm() {
                   </Field>
                 </div>
                 <input type="hidden" name="projectId" value={project.id} />
-                <input type="hidden" name="company" value={project.company} />
+                {project.id && (
+                  <input type="hidden" name="company" value={project.company} />
+                )}
                 {project.id ? (
                   <input type="hidden" name="unit" value={project.unit} />
                 ) : (
                   <>
-                    <Field label="شرکت *">
-                      <select
-                        className={input}
-                        value={taskCompany}
-                        disabled={!!editing}
-                        onChange={(e) => {
-                          setCompany(e.target.value);
-                          setParentTaskId("");
-                        }}
-                      >
-                        {w.companies
-                          .filter((c) => can(user, "tasks.write", c))
-                          .map((c) => (
-                            <option key={c}>{c}</option>
-                          ))}
-                      </select>
-                    </Field>
+                    <OrganizationTreeSelect
+                      label="شرکت"
+                      name="company"
+                      nodes={organization}
+                      allowedIds={companyIds}
+                      value={taskCompany}
+                      disabled={!!editing}
+                      onChange={(name) => {
+                        setCompany(name);
+                        setParentTaskId("");
+                      }}
+                    />
                     <Field label="واحد *">
                       <select
                         key={taskCompany}
@@ -288,16 +302,14 @@ export default function TaskForm() {
                     )}
                   </Field>
                 )}
-                <Field label="منبع درخواست *">
+                <Field label="منبع درخواست (اختیاری)">
                   <select
                     className={input}
                     key={"source-" + project.id}
                     name="source"
-                    defaultValue={
-                      editing?.source ||
-                      (project.requestSources || defaultRequestSources)[0]
-                    }
+                    defaultValue={editing?.source || ""}
                   >
+                    <option value="">بدون منبع درخواست</option>
                     {Array.from(
                       new Set([
                         ...(project.requestSources || defaultRequestSources),
