@@ -1,3 +1,4 @@
+import BudgetInput from "../components/BudgetInput";
 import Modal from "../components/Modal";
 import PersonPicker from "../components/PersonPicker";
 import OrganizationTreeSelect from "../components/OrganizationTreeSelect";
@@ -259,14 +260,7 @@ export default function Projects() {
                     />
                   </Field>
                   <Field label="بودجه (ریال)">
-                    <input
-                      name="budget"
-                      type="number"
-                      min="0"
-                      className={input}
-                      defaultValue={editing?.budget || 0}
-                      required
-                    />
+                    <BudgetInput defaultValue={editing?.budget || 0} />
                   </Field>
                   <Field label="وضعیت">
                     <select
@@ -368,8 +362,7 @@ export default function Projects() {
       )}
       {searchParams.get("activeOn") &&
         !w.projects.some(
-          (p) =>
-            p.start.slice(0, 10) === searchParams.get("activeOn")!,
+          (p) => p.start.slice(0, 10) === searchParams.get("activeOn")!,
         ) && <p>در این تاریخ پروژه‌ای در محدوده دسترسی شما وجود ندارد.</p>}
       <div className="grid items-start gap-5 md:grid-cols-2 xl:grid-cols-3">
         {w.projects
@@ -444,13 +437,11 @@ export default function Projects() {
                   </svg>
                 )}
                 <div className="absolute inset-x-0 bottom-0 bg-slate-950/40 p-3 text-xs text-white backdrop-blur-sm">
-                  {p.code} · {p.company}
+                  {p.company}
                 </div>
               </div>
               <div className="space-y-3 text-xs text-slate-500 dark:text-slate-400">
-                <p>
-                  {p.code} · {p.status}
-                </p>
+                <p>{p.status}</p>
                 <p>مدیر: {w.users.find((u) => u.id === p.managerId)?.name}</p>
                 <p>حامی: {p.sponsor}</p>
                 <p>

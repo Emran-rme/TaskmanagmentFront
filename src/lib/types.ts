@@ -23,7 +23,7 @@ export interface Task {
   id: string;
   code: string;
   title: string;
-  projectId: string;
+  projectId: string | null;
   parentTaskId?: string;
   company: string;
   unit: string;

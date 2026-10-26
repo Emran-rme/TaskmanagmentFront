@@ -198,8 +198,10 @@ export default function TaskDetail() {
                   <FolderKanban size={16} />
                   پروژه / برد
                 </h3>
-                <Link to={`/projects/${task.projectId}`}>
-                  {project?.name || "پروژه"}
+                <Link
+                  to={task.projectId ? `/projects/${task.projectId}` : "/tasks"}
+                >
+                  {project?.name || "وظیفه مستقل"}
                 </Link>
               </div>
               <div>
@@ -479,7 +481,7 @@ export default function TaskDetail() {
               {editable && (
                 <Link
                   className={secondary + " my-3"}
-                  to={`/tasks/new?projectId=${task.projectId}&parentTaskId=${task.id}`}
+                  to={`/tasks/new?projectId=${task.projectId || ""}&parentTaskId=${task.id}`}
                 >
                   افزودن زیروظیفه
                 </Link>

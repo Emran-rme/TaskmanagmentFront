@@ -19,7 +19,7 @@ import {
 import { jalali, fa } from "../lib/jalali";
 import { Task, assignedIds, assignedNames } from "../lib/types";
 export default function Tasks() {
-  const {projectId}=useParams();
+  const { projectId } = useParams();
   const actor = useSelector((s: RootState) => s.auth.user);
   const { data: w } = useProjectWorkspace();
   const [view, setView] = useState<"tree" | "table">("tree");
@@ -34,7 +34,9 @@ export default function Tasks() {
   if (!w) return <Loading />;
   const sortValue = (t: Task) =>
     sort === "projectId"
-      ? w.projects.find((p) => p.id === t.projectId)?.name || ""
+      ? w.projects.find((p) => p.id === t.projectId)?.name ||
+        "وظیفه مستقل" ||
+        ""
       : sort === "assigneeId"
         ? assignedNames(t, w.users) || ""
         : t[sort];
@@ -50,7 +52,7 @@ export default function Tasks() {
           t.code,
           t.company,
           t.unit,
-          w.projects.find((p) => p.id === t.projectId)?.name,
+          w.projects.find((p) => p.id === t.projectId)?.name || "وظیفه مستقل",
           assignedNames(t, w.users),
         ]
           .join(" ")
@@ -69,7 +71,8 @@ export default function Tasks() {
     rows.map((t) => ({
       کد: t.code,
       عنوان: t.title,
-      پروژه: w.projects.find((p) => p.id === t.projectId)?.name,
+      پروژه:
+        w.projects.find((p) => p.id === t.projectId)?.name || "وظیفه مستقل",
       مسئول: assignedNames(t, w.users),
       شرکت: t.company,
       واحد: t.unit,
@@ -129,7 +132,10 @@ export default function Tasks() {
             Excel
           </button>
           {can(actor, "tasks.write") && (
-            <Link className={button} to={"/tasks/new"+(projectId?"?projectId="+projectId:"")}>
+            <Link
+              className={button}
+              to={"/tasks/new" + (projectId ? "?projectId=" + projectId : "")}
+            >
               <Plus size={16} />
               وظیفه جدید
             </Link>
@@ -263,7 +269,8 @@ export default function Tasks() {
                       </p>
                     </td>
                     <td className="max-w-40 p-3">
-                      {w.projects.find((p) => p.id === t.projectId)?.name}
+                      {w.projects.find((p) => p.id === t.projectId)?.name ||
+                        "وظیفه مستقل"}
                     </td>
                     <td className="p-3">{assignedNames(t, w.users)}</td>
                     <td className="p-3">

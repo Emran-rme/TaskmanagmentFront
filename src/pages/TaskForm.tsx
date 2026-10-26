@@ -35,7 +35,10 @@ import { useTaskReturnPath } from "../lib/taskNavigation";
 export default function TaskForm() {
   const { id } = useParams();
   const [params] = useSearchParams();
-  const [projectId, setProjectId] = useState(params.get("projectId") || "");
+  const [projectId, setProjectId] = useState(
+    (params.get("projectId") === "null" ? "" : params.get("projectId")) || "",
+  );
+  const [company, setCompany] = useState("");
   const [projectPickerOpen, setProjectPickerOpen] = useState(false);
   const [parentTaskId, setParentTaskId] = useState(
     params.get("parentTaskId") || "",
@@ -55,33 +58,37 @@ export default function TaskForm() {
   const editing = id ? w.tasks.find((task) => task.id === id) : undefined;
   if (id && !editing) return <ErrorBox message="وظیفه یافت نشد." />;
   const requestedProjectId = projectId || editing?.projectId;
-  const project = requestedProjectId
-    ? w.projects.find(
-        (p) =>
-          p.id === requestedProjectId && can(user, "tasks.write", p.company),
-      )
-    : w.projects.find(
-        (p) => p.company && p.unit && can(user, "tasks.write", p.company),
-      ) || w.projects.find((p) => can(user, "tasks.write", p.company));
+  const selectedProject = w.projects.find(
+    (p) => p.id === requestedProjectId && can(user, "tasks.write", p.company),
+  );
+  const taskCompany =
+    selectedProject?.company ||
+    editing?.company ||
+    company ||
+    w.companies.find((c) => can(user, "tasks.write", c)) ||
+    "";
+  const project = selectedProject || {
+    id: "",
+    name: "بدون پروژه (وظیفه مستقل)",
+    company: taskCompany,
+    unit: editing?.unit || "",
+    requestSources: defaultRequestSources,
+    supervisorId: undefined,
+    managerId: undefined,
+  };
   const close = () => navigate(returnTo);
-  if (!project && requestedProjectId)
+  if (requestedProjectId && !selectedProject)
     return <ErrorBox message="پروژه یافت نشد یا مجوز ثبت وظیفه ندارید." />;
-  if (!project)
-    return (
-      <Card title="تعریف وظیفه">
-        <p className="mb-4">برای ثبت وظیفه، ابتدا یک پروژه تعریف کنید.</p>
-        <Link className={button} to="/projects?new=true">
-          تعریف پروژه
-        </Link>
-      </Card>
-    );
+  if (!can(user, "tasks.write", taskCompany))
+    return <ErrorBox message="مجوز ثبت وظیفه ندارید." />;
   const assignees = w.users.filter(
     (person) =>
       person.enabled !== false &&
       person.assignable !== false &&
-      w.projectMembers?.some(
-        (m) => m.projectId === project.id && m.userId === person.id,
-      ) &&
+      (!project.id ||
+        w.projectMembers?.some(
+          (m) => m.projectId === project.id && m.userId === person.id,
+        )) &&
       person.companies?.includes(project.company) &&
       (manages(user, project.company) ||
         (editing
@@ -91,10 +98,12 @@ export default function TaskForm() {
   const approvers = w.users.filter(
     (person) =>
       person.enabled !== false &&
+      (!!project.id || person.role === "Manager" || person.role === "Admin") &&
       (!editing ||
         manages(user, project.company) ||
         person.id === editing.approverId) &&
-      (person.companies?.includes(project.company) ||
+      (person.role === "Admin" ||
+        person.companies?.includes(project.company) ||
         person.id === project.supervisorId ||
         person.id === project.managerId),
   );
@@ -136,6 +145,7 @@ export default function TaskForm() {
                 method: editing ? "PUT" : "POST",
                 body: {
                   ...body,
+                  projectId: project.id || null,
                   version: editing?.version,
                   assigneeId: assigneeIds[0],
                   assigneeIds,
@@ -160,8 +170,8 @@ export default function TaskForm() {
         >
           <div className="work-form-content" ref={contentRef}>
             <p className="form-intro">
-              عنوان، پروژه و افراد مسئول را مشخص کنید. موارد تکمیلی در انتهای
-              فرم قرار دارند.
+              عنوان و افراد مسئول را مشخص کنید. موارد تکمیلی در انتهای فرم قرار
+              دارند.
             </p>
             {error && <ErrorBox message={error} />}
             <fieldset disabled={isLoading} className="form-section">
@@ -181,9 +191,58 @@ export default function TaskForm() {
                 </div>
                 <input type="hidden" name="projectId" value={project.id} />
                 <input type="hidden" name="company" value={project.company} />
-                <input type="hidden" name="unit" value={project.unit} />
+                {project.id ? (
+                  <input type="hidden" name="unit" value={project.unit} />
+                ) : (
+                  <>
+                    <Field label="شرکت *">
+                      <select
+                        className={input}
+                        value={taskCompany}
+                        disabled={!!editing}
+                        onChange={(e) => {
+                          setCompany(e.target.value);
+                          setParentTaskId("");
+                        }}
+                      >
+                        {w.companies
+                          .filter((c) => can(user, "tasks.write", c))
+                          .map((c) => (
+                            <option key={c}>{c}</option>
+                          ))}
+                      </select>
+                    </Field>
+                    <Field label="واحد *">
+                      <select
+                        key={taskCompany}
+                        className={input}
+                        name="unit"
+                        required
+                        defaultValue={editing?.unit || ""}
+                      >
+                        <option value="">انتخاب واحد</option>
+                        {w.units
+                          .filter((u) => {
+                            const nodes = w.organization || [];
+                            let node = nodes.find((n) => n.name === u);
+                            const seen = new Set<string>();
+                            while (node && !seen.has(node.id)) {
+                              seen.add(node.id);
+                              if (node.name === taskCompany) return true;
+                              const parentId = node.parentId;
+                              node = nodes.find((n) => n.id === parentId);
+                            }
+                            return !nodes.length;
+                          })
+                          .map((u) => (
+                            <option key={u}>{u}</option>
+                          ))}
+                      </select>
+                    </Field>
+                  </>
+                )}
                 {!params.get("projectId") && (
-                  <Field label="پروژه *">
+                  <Field label="پروژه (اختیاری)">
                     <button
                       type="button"
                       aria-label="انتخاب پروژه"
@@ -205,15 +264,20 @@ export default function TaskForm() {
                         <DefinitionPicker
                           title="پروژه"
                           selectedId={project.id}
-                          items={w.projects
-                            .filter((p) => can(user, "tasks.write", p.company))
-                            .map((p) => ({
-                              id: p.id,
-                              name: p.name,
-                              subtitle: [p.code, p.company, p.unit]
-                                .filter(Boolean)
-                                .join(" · "),
-                            }))}
+                          items={[
+                            { id: "", name: "بدون پروژه (وظیفه مستقل)" },
+                            ...w.projects
+                              .filter((p) =>
+                                can(user, "tasks.write", p.company),
+                              )
+                              .map((p) => ({
+                                id: p.id,
+                                name: p.name,
+                                subtitle: [p.company, p.unit]
+                                  .filter(Boolean)
+                                  .join(" · "),
+                              })),
+                          ]}
                           onSelect={(id) => {
                             setProjectId(String(id));
                             setParentTaskId("");
@@ -245,8 +309,12 @@ export default function TaskForm() {
                   </select>
                 </Field>
                 <p className="form-context form-full">
-                  {project.company} / {project.unit} · منابع درخواست در تنظیمات
-                  پروژه قابل تعریف‌اند.
+                  {project.id
+                    ? project.company +
+                      " / " +
+                      project.unit +
+                      " · منابع درخواست در تنظیمات پروژه قابل تعریف‌اند."
+                    : "وظیفه مستقل در کارتابل انجام‌دهنده نمایش داده می‌شود."}
                 </p>
               </div>
             </fieldset>
@@ -254,7 +322,7 @@ export default function TaskForm() {
               <legend>انجام‌دهنده و تأییدکننده</legend>
               <div className="form-grid">
                 <MultiPersonPicker
-                  key={"assignee-" + project.id}
+                  key={"assignee-" + project.id + taskCompany}
                   name="assigneeIds"
                   label="تخصیص به (چند انتخابی) *"
                   users={assignees}
@@ -274,7 +342,7 @@ export default function TaskForm() {
                   }
                 />
                 <PersonPicker
-                  key={"approver-" + project.id}
+                  key={"approver-" + project.id + taskCompany}
                   name="approverId"
                   label="تأییدکننده وظیفه *"
                   users={approvers}
@@ -403,7 +471,8 @@ export default function TaskForm() {
                       .filter(
                         (task) =>
                           task.id !== editing?.id &&
-                          task.projectId === project.id &&
+                          (task.projectId || "") === project.id &&
+                          task.company === taskCompany &&
                           task.status !== "بسته شده" &&
                           (manages(user, task.company) ||
                             assignedIds(task).includes(user?.id || 0)),
