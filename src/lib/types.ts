@@ -47,9 +47,14 @@ export interface Task {
   version: string;
 }
 export const defaultRequestSources = ["صورتجلسه", "کمیته", "دستور"];
-export const assignedIds = (task: Task): number[] =>
+export const assignedIds = (
+  task: Pick<Task, "assigneeId" | "assigneeIds">,
+): number[] =>
   task.assigneeIds?.length ? task.assigneeIds : [task.assigneeId];
-export const assignedNames = (task: Task, users: User[]) =>
+export const assignedNames = (
+  task: Pick<Task, "assigneeId" | "assigneeIds">,
+  users: User[],
+) =>
   assignedIds(task)
     .map((id) => users.find((user) => user.id === id)?.name || "کاربر ثبت‌شده")
     .join("، ");
@@ -86,6 +91,7 @@ export interface Project {
   description: string;
   coverColor: string;
   coverImage: string;
+  hasCoverImage?: boolean;
   id: string;
   name: string;
   code: string;
@@ -106,7 +112,7 @@ export interface Settings {
   approval: boolean;
 }
 export interface Workspace {
-  projectMembers?: {projectId: string; userId: number; roleId: string}[];
+  projectMembers?: { projectId: string; userId: number; roleId: string }[];
   organization?: {
     id: string;
     code?: string;
@@ -124,3 +130,27 @@ export interface Workspace {
   priorities: string[];
 }
 export const statuses = ["جدید", "در حال انجام", "حل شده", "بسته شده"];
+
+export interface DashboardData {
+  tasks: Pick<
+    Task,
+    | "id"
+    | "code"
+    | "title"
+    | "projectId"
+    | "unit"
+    | "assigneeId"
+    | "assigneeIds"
+    | "approverId"
+    | "start"
+    | "due"
+    | "createdAt"
+    | "priority"
+    | "status"
+  >[];
+  projects: Pick<
+    Project,
+    "id" | "name" | "company" | "unit" | "managerId" | "start" | "status"
+  >[];
+  users: User[];
+}

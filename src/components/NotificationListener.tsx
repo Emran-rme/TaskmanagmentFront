@@ -5,7 +5,9 @@ export default function NotificationListener() {
   const user = useSelector((s: RootState) => s.auth.user);
   const { data: notices } = useNoticesQuery(undefined, {
     skip: !can(user, "notifications.read"),
-    pollingInterval: 15000,
+    pollingInterval: 30000,
+    skipPollingIfUnfocused: true,
+    refetchOnFocus: true,
   });
   const seen = useRef(new Set<string>());
   const initialized = useRef(false);

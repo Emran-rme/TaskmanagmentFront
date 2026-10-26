@@ -271,7 +271,7 @@ export const mockQuery: BaseQueryFn<
   }
   if (path === "auth/logout") return ok();
   if (method === "GET") {
-    if (path === "workspace")
+    if (path === "workspace" || path === "dashboard")
       return ok({
         tasks: s.tasks,
         projects: s.projects,
@@ -415,4 +415,3 @@ export const mockQuery: BaseQueryFn<
   save();
   return ok(result);
 };
-

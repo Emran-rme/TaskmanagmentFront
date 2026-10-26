@@ -5,7 +5,9 @@ import { Card, button, secondary, Loading, ErrorBox } from "../components/ui";
 import { jalali, fa } from "../lib/jalali";
 export default function Notifications() {
   const { data: n, error } = useNoticesQuery(undefined, {
-      pollingInterval: 10000,
+      pollingInterval: 30000,
+      skipPollingIfUnfocused: true,
+      refetchOnFocus: true,
     }),
     [mutate] = useMutateMutation(),
     [channel, C] = useState(""),
@@ -84,15 +86,25 @@ export default function Notifications() {
         </p>
       )}
       {typeof Notification !== "undefined" && (
-        <button className={secondary} onClick={async () => {
-          try {
-            const registration = await navigator.serviceWorker.getRegistration();
-            const received = await registration?.getNotifications() || [];
-            setBrowserStatus(received.length
-              ? `اعلان دریافت‌شده در مرورگر: ${received.length} — ${received.map(x => x.tag).join("، ")}`
-              : "اعلان فعالی در مرورگر وجود ندارد؛ ممکن است بسته شده باشد.");
-          } catch { setActionError("بررسی اعلان‌های مرورگر ناموفق بود."); }
-        }}>بررسی دریافت اعلان مرورگر</button>
+        <button
+          className={secondary}
+          onClick={async () => {
+            try {
+              const registration =
+                await navigator.serviceWorker.getRegistration();
+              const received = (await registration?.getNotifications()) || [];
+              setBrowserStatus(
+                received.length
+                  ? `اعلان دریافت‌شده در مرورگر: ${received.length} — ${received.map((x) => x.tag).join("، ")}`
+                  : "اعلان فعالی در مرورگر وجود ندارد؛ ممکن است بسته شده باشد.",
+              );
+            } catch {
+              setActionError("بررسی اعلان‌های مرورگر ناموفق بود.");
+            }
+          }}
+        >
+          بررسی دریافت اعلان مرورگر
+        </button>
       )}
       <p className="text-xs text-slate-500 dark:text-slate-400">
         وضعیت واقعی صف ارسال، اجرای ماژول‌ها و خطاها هر ده ثانیه به‌روز می‌شود.

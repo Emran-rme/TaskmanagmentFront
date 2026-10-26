@@ -11,13 +11,17 @@ import {
   ArrowLeft,
   FolderOpen,
 } from "lucide-react";
-import { useWorkspaceQuery, errorText, can, type RootState } from "../store";
+import { useDashboardQuery, errorText, can, type RootState } from "../store";
 import { ErrorBox, Loading, Badge, input } from "../components/ui";
 import { assignedNames, assignedIds } from "../lib/types";
 import { fa, iso, jalali, monthDays, months, weekdays } from "../lib/jalali";
 import { toJalaali } from "jalaali-js";
 export default function Dashboard() {
-  const { data: w, error } = useWorkspaceQuery();
+  const { data: w, error } = useDashboardQuery(undefined, {
+    pollingInterval: 60000,
+    skipPollingIfUnfocused: true,
+    refetchOnFocus: true,
+  });
   const [projectId, setProjectId] = useState("");
   const actor = useSelector((s: RootState) => s.auth.user);
   if (error) return <ErrorBox message={errorText(error)} />;
@@ -399,7 +403,7 @@ export default function Dashboard() {
                     className={iso(d) === today ? "is-today" : ""}
                     aria-label={`${jalali(date)}؛ ${fa(projects.length)} پروژه`}
                     title={`${jalali(date)} · ${fa(projects.length)} پروژه`}
-                  to={`/projects?activeOn=${date}`}
+                    to={`/projects?activeOn=${date}`}
                   >
                     {fa(toJalaali(d).jd)}
                     {!!projects.length && (

@@ -1,7 +1,7 @@
 import { configureStore, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { setupListeners } from "@reduxjs/toolkit/query";
-import type { User, Workspace } from "./lib/types";
+import type { User, Workspace, DashboardData } from "./lib/types";
 import type { IntegrationResponse } from "./lib/integrations";
 import type { ModulesResponse } from "./lib/modules";
 export interface DeletedRecord {
@@ -47,8 +47,9 @@ const authenticatedQuery = fetchBaseQuery({
   },
 });
 export const api = createApi({
-  refetchOnFocus: true,
+  refetchOnFocus: false,
   refetchOnReconnect: true,
+  refetchOnMountOrArgChange: 60,
   reducerPath: "api",
   baseQuery: async (args, apiContext, extraOptions) => {
     const result =
@@ -66,6 +67,7 @@ export const api = createApi({
   },
   tagTypes: [
     "Workspace",
+    "ProjectCover",
     "Detail",
     "Notices",
     "Users",
@@ -116,8 +118,19 @@ export const api = createApi({
       query: () => "settings/integrations",
       providesTags: ["Integrations"],
     }),
+    dashboard: b.query<DashboardData, void>({
+      query: () => "dashboard",
+      providesTags: ["Workspace"],
+      keepUnusedDataFor: 120,
+    }),
+    projectCover: b.query<{ coverImage: string }, string>({
+      query: (id) => `projects/${id}/cover`,
+      providesTags: (_result, _error, id) => [{ type: "ProjectCover", id }],
+      keepUnusedDataFor: 60,
+    }),
     workspace: b.query<Workspace, void>({
       query: () => "workspace",
+      keepUnusedDataFor: 120,
       providesTags: ["Workspace"],
     }),
     detail: b.query<any, string>({
@@ -136,14 +149,24 @@ export const api = createApi({
       query: ({ url, body, method = "POST" }) => ({ url, method, body }),
       invalidatesTags: (_result, _error, arg) =>
         arg.url === "projects" || /^projects\/[^/]+$/.test(arg.url)
-          ? ["Workspace"]
+          ? [
+              "Workspace",
+              { type: "ProjectCover", id: arg.url.split("/")[1] || "LIST" },
+            ]
           : arg.url.startsWith("settings/modules")
-          ? ["Modules", "Workspace", "Integrations", "Notices"]
-          : arg.url === "settings"
-            ? ["Workspace", "Modules"]
-            : arg.url === "settings/integrations"
-              ? ["Integrations"]
-              : ["Workspace", "Detail", "Notices", "Users", "Trash", "Master"],
+            ? ["Modules", "Workspace", "Integrations", "Notices"]
+            : arg.url === "settings"
+              ? ["Workspace", "Modules"]
+              : arg.url === "settings/integrations"
+                ? ["Integrations"]
+                : [
+                    "Workspace",
+                    "Detail",
+                    "Notices",
+                    "Users",
+                    "Trash",
+                    "Master",
+                  ],
     }),
   }),
 });
@@ -154,6 +177,8 @@ export const store = configureStore({
 setupListeners(store.dispatch);
 export type RootState = ReturnType<typeof store.getState>;
 export const {
+  useDashboardQuery,
+  useProjectCoverQuery,
   useProjectRolesQuery,
   useColumnsQuery,
   useTodosQuery,

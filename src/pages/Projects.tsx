@@ -1,3 +1,5 @@
+import { readCoverImage } from "../lib/coverImage";
+import ProjectCover from "../components/ProjectCover";
 import BudgetInput from "../components/BudgetInput";
 import Modal from "../components/Modal";
 import PersonPicker from "../components/PersonPicker";
@@ -135,12 +137,7 @@ export default function Projects() {
                     throw {
                       data: { message: "حداکثر حجم کاور دو مگابایت است." },
                     };
-                  coverImage = await new Promise<string>((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = () => resolve(String(reader.result));
-                    reader.onerror = reject;
-                    reader.readAsDataURL(file);
-                  });
+                  coverImage = await readCoverImage(file);
                 }
                 await mutate({
                   url: "projects" + (editing ? "/" + editing.id : ""),
@@ -148,6 +145,7 @@ export default function Projects() {
                   body: {
                     ...f,
                     coverImage,
+                    preserveCoverImage: !!editing && !file?.size,
                     requestSources: String(f.requestSources || "")
                       .split(/\r?\n/)
                       .map((x) => x.trim())
@@ -183,7 +181,9 @@ export default function Projects() {
                         className={input}
                         name={n}
                         required={n === "name"}
-                        defaultValue={editing?.[n as keyof Project] || ""}
+                        defaultValue={String(
+                          editing?.[n as keyof Project] || "",
+                        )}
                       />
                     </Field>
                   ))}
@@ -402,13 +402,7 @@ export default function Projects() {
               }
             >
               <div className="relative mb-5 overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-400 via-brand to-blue-700">
-                {p.coverImage ? (
-                  <img
-                    src={p.coverImage}
-                    alt={p.name}
-                    className="h-36 w-full object-cover"
-                  />
-                ) : (
+                <ProjectCover project={p}>
                   <svg
                     className="h-36 w-full"
                     preserveAspectRatio="none"
@@ -435,7 +429,7 @@ export default function Projects() {
                       opacity="0.5"
                     />
                   </svg>
-                )}
+                </ProjectCover>
                 <div className="absolute inset-x-0 bottom-0 bg-slate-950/40 p-3 text-xs text-white backdrop-blur-sm">
                   {p.company}
                 </div>
