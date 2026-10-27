@@ -1,5 +1,5 @@
 import { insertSmsParameter } from "../lib/smsParameterInsertion";
-import { forwardRef, useImperativeHandle, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import {
@@ -215,10 +215,6 @@ export function ModuleForm({
   busy: boolean;
   action: (url: string, method?: string, body?: unknown) => Promise<boolean>;
 }) {
-  const [activeTemplate, setActiveTemplate] = useState("taskTemplate");
-  const templateEditors = useRef<
-    Record<string, SmsTemplateEditorHandle | null>
-  >({});
   const [enabled, setEnabled] = useState(installed.enabled);
   const [values, setValues] = useState(installed.values);
   const [events, setEvents] = useState(installed.events || []);
@@ -258,73 +254,11 @@ export function ModuleForm({
             setDirty(false);
         }}
       >
-        {definition.id === "sms-rahyab" && (
-          <div className="rounded-xl bg-sky-50 p-4 text-sm leading-7 dark:bg-sky-950/50">
-            <p className="font-bold">متن پیامک پارامتریک</p>
-            <p>
-              پارامترها را دقیقاً با آکولاد وارد کنید؛ پیش‌نمایش با داده نمونه
-              است و پیامکی ارسال نمی‌کند. تاریخ مهلت شمسی است. قالب خالی، متن
-              قبلی سامانه را ارسال می‌کند.
-            </p>
-            <label className="mt-3 block">
-              قالب مقصد برای درج پارامتر
-              <select
-                className={input + " mt-2"}
-                value={activeTemplate}
-                onChange={(e) => setActiveTemplate(e.target.value)}
-              >
-                {definition.fields
-                  .filter((field) => field.type === "textarea")
-                  .map((field) => (
-                    <option key={field.key} value={field.key}>
-                      {field.label}
-                    </option>
-                  ))}
-              </select>
-            </label>
-            <div
-              className="mt-3 flex flex-wrap gap-2"
-              role="group"
-              aria-label="پارامترهای قابل درج در قالب انتخاب‌شده"
-            >
-              {smsParameterOptions.map(([key, title]) => (
-                <button
-                  key={key}
-                  type="button"
-                  className={secondary + " text-xs"}
-                  aria-label={`افزودن ${title} به قالب انتخاب‌شده`}
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() =>
-                    templateEditors.current[activeTemplate]?.insert(`{${key}}`)
-                  }
-                >
-                  {title} <span dir="ltr">{`{${key}}`}</span>
-                </button>
-              ))}
-            </div>
-            <p>
-              نام گیرنده، نوع، عنوان، کد، نام پروژه، مهلت، وضعیت، شرکت و متن
-              اصلی پیام. لینک مستقیم با {"{url}"}، لینک وظیفه با {"{taskUrl}"} و
-              لینک پروژه با {"{projectUrl}"}. نام پروژه و لینک پروژه برای وظیفه
-              مستقل خالی است؛ پیام عمومی فقط نام گیرنده، نوع و متن اصلی را دارد.
-            </p>
-            <p className="mt-2">
-              نمونه:{" "}
-              {
-                "{recipientName} عزیز، {type} «{title}» با کد {code}؛ مشاهده: {url}"
-              }
-            </p>
-          </div>
-        )}
         {definition.fields.map((f) => (
           <div key={f.key}>
             <Field label={f.label}>
               {f.type === "textarea" ? (
                 <SmsTemplateEditor
-                  ref={(editor) => {
-                    templateEditors.current[f.key] = editor;
-                  }}
-                  onFocus={() => setActiveTemplate(f.key)}
                   label={f.label}
                   value={values[f.key] || ""}
                   onChange={(next) => {
@@ -483,18 +417,15 @@ const smsParameterOptions = [
   ["taskUrl", "لینک وظیفه"],
   ["projectUrl", "لینک پروژه"],
 ] as const;
-interface SmsTemplateEditorHandle {
-  insert: (token: string) => void;
-}
-const SmsTemplateEditor = forwardRef<
-  SmsTemplateEditorHandle,
-  {
-    value: string;
-    onChange: (value: string) => void;
-    label: string;
-    onFocus: () => void;
-  }
->(function SmsTemplateEditor({ value, onChange, label, onFocus }, ref) {
+function SmsTemplateEditor({
+  value,
+  onChange,
+  label,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  label: string;
+}) {
   const editor = useRef<HTMLTextAreaElement>(null);
   const selection = useRef<{ start: number; end: number } | null>(null);
   const [error, setError] = useState("");
@@ -518,7 +449,6 @@ const SmsTemplateEditor = forwardRef<
       setError(err instanceof Error ? err.message : "درج پارامتر ناموفق بود.");
     }
   }
-  useImperativeHandle(ref, () => ({ insert }));
   return (
     <div className="space-y-3">
       <textarea
@@ -530,7 +460,6 @@ const SmsTemplateEditor = forwardRef<
         maxLength={1500}
         value={value}
         placeholder="{message}"
-        onFocus={onFocus}
         onSelect={(e) => {
           selection.current = {
             start: e.currentTarget.selectionStart,
@@ -573,7 +502,7 @@ const SmsTemplateEditor = forwardRef<
       )}
     </div>
   );
-});
+}
 function SmsTemplatePreview({
   value,
   kind,
