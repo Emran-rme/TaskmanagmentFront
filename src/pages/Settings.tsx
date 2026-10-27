@@ -92,7 +92,7 @@ export default function Settings() {
       ) : tab === "sms" ? (
         <Card title="ماژول‌های پیامک">
           <p className="mb-4 text-sm leading-8 text-slate-500 dark:text-slate-400">
-            رهیاب، کاوه‌نگار و درگاه عمومی از بخش مدیریت ماژول‌ها اضافه و تنظیم
+            نواوران موج، کاوه‌نگار و درگاه عمومی از بخش مدیریت ماژول‌ها اضافه و تنظیم
             می‌شوند. ماژول فعال، پیامک‌های وظایف و یادآوری را از صف ارسال دریافت
             می‌کند.
           </p>
@@ -104,7 +104,7 @@ export default function Settings() {
             )?.name || "انتخاب نشده"}
           </p>
           <Link className={button} to="/modules">
-            مدیریت ماژول‌ها و تنظیم رهیاب
+            مدیریت ماژول‌ها و تنظیم نواوران موج
           </Link>
         </Card>
       ) : integrations.error ? (
