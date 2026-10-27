@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { insertSmsParameter } from "../lib/smsParameterInsertion";
+import { useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import {
@@ -266,13 +267,14 @@ function ModuleForm({
             </p>
             <p>
               نام گیرنده، نوع، عنوان، کد، نام پروژه، مهلت، وضعیت، شرکت و متن
-              اصلی پیام. نام پروژه برای وظیفه مستقل خالی است؛ پیام عمومی فقط نام
-              گیرنده، نوع و متن اصلی را دارد.
+              اصلی پیام. لینک مستقیم با {"{url}"}، لینک وظیفه با {"{taskUrl}"} و
+              لینک پروژه با {"{projectUrl}"}. نام پروژه و لینک پروژه برای وظیفه
+              مستقل خالی است؛ پیام عمومی فقط نام گیرنده، نوع و متن اصلی را دارد.
             </p>
             <p className="mt-2">
               نمونه:{" "}
               {
-                "{recipientName} عزیز، {type} «{title}» با کد {code}؛ مهلت: {dueDate}. {message}"
+                "{recipientName} عزیز، {type} «{title}» با کد {code}؛ مشاهده: {url}"
               }
             </p>
           </div>
@@ -281,15 +283,11 @@ function ModuleForm({
           <div key={f.key}>
             <Field label={f.label}>
               {f.type === "textarea" ? (
-                <textarea
-                  className={input}
-                  dir="rtl"
-                  rows={4}
-                  maxLength={1500}
+                <SmsTemplateEditor
+                  label={f.label}
                   value={values[f.key] || ""}
-                  placeholder="{message}"
-                  onChange={(e) => {
-                    setValues((v) => ({ ...v, [f.key]: e.target.value }));
+                  onChange={(next) => {
+                    setValues((v) => ({ ...v, [f.key]: next }));
                     setDirty(true);
                   }}
                 />
@@ -314,7 +312,11 @@ function ModuleForm({
               )}
             </Field>
             {definition.id === "sms-rahyab" && f.type === "textarea" && (
-              <SmsTemplatePreview value={values[f.key] || ""} kind={f.key} />
+              <SmsTemplatePreview
+                value={values[f.key] || ""}
+                kind={f.key}
+                siteUrl={values.siteUrl || window.location.origin}
+              />
             )}
             {f.hint && (
               <p className="mt-2 text-xs leading-6 text-slate-500 dark:text-slate-400">
@@ -426,21 +428,120 @@ function ModuleForm({
   );
 }
 
-const smsTemplateParameters = [
-  "{recipientName}",
-  "{type}",
-  "{title}",
-  "{code}",
-  "{projectName}",
-  "{dueDate}",
-  "{status}",
-  "{company}",
-  "{message}",
-];
-function SmsTemplatePreview({ value, kind }: { value: string; kind: string }) {
+const smsParameterOptions = [
+  ["recipientName", "نام گیرنده"],
+  ["type", "نوع"],
+  ["title", "عنوان"],
+  ["code", "کد"],
+  ["projectName", "نام پروژه"],
+  ["dueDate", "مهلت"],
+  ["status", "وضعیت"],
+  ["company", "شرکت"],
+  ["message", "متن اصلی"],
+  ["url", "لینک مستقیم"],
+  ["taskUrl", "لینک وظیفه"],
+  ["projectUrl", "لینک پروژه"],
+] as const;
+const smsTemplateParameters = smsParameterOptions.map(([key]) => `{${key}}`);
+function SmsTemplateEditor({
+  value,
+  onChange,
+  label,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  label: string;
+}) {
+  const editor = useRef<HTMLTextAreaElement>(null);
+  const [error, setError] = useState("");
+  return (
+    <div className="space-y-3">
+      <textarea
+        ref={editor}
+        aria-label={label}
+        className={input}
+        dir="rtl"
+        rows={4}
+        maxLength={1500}
+        value={value}
+        placeholder="{message}"
+        onChange={(e) => {
+          setError("");
+          onChange(e.target.value);
+        }}
+      />
+      <fieldset className="rounded-xl border border-slate-200 p-3 dark:border-slate-700">
+        <legend className="px-2 text-xs">
+          انتخاب و درج پارامتر در محل نشانگر
+        </legend>
+        <div className="flex flex-wrap gap-2">
+          {smsParameterOptions.map(([key, title]) => (
+            <button
+              key={key}
+              type="button"
+              className={secondary + " text-xs"}
+              title={`درج {${key}}`}
+              aria-label={`درج ${title}`}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                try {
+                  const node = editor.current;
+                  const result = insertSmsParameter(
+                    value,
+                    `{${key}}`,
+                    node?.selectionStart ?? value.length,
+                    node?.selectionEnd ?? value.length,
+                  );
+                  setError("");
+                  onChange(result.value);
+                  requestAnimationFrame(() => {
+                    node?.focus();
+                    node?.setSelectionRange(result.caret, result.caret);
+                  });
+                } catch (err) {
+                  setError(
+                    err instanceof Error
+                      ? err.message
+                      : "درج پارامتر ناموفق بود.",
+                  );
+                }
+              }}
+            >
+              {title} <span dir="ltr">{`{${key}}`}</span>
+            </button>
+          ))}
+        </div>
+      </fieldset>
+      {error && (
+        <p role="alert" className="text-sm text-rose-600">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+function SmsTemplatePreview({
+  value,
+  kind,
+  siteUrl,
+}: {
+  value: string;
+  kind: string;
+  siteUrl: string;
+}) {
   const project = kind === "projectTemplate";
   const general = kind === "generalTemplate";
   const sample: Record<string, string> = {
+    url: general
+      ? ""
+      : `${siteUrl.replace(/\/$/, "")}/${project ? "projects" : "tasks"}/00000000-0000-0000-0000-00000000000${project ? "2" : "1"}`,
+    taskUrl:
+      general || project
+        ? ""
+        : `${siteUrl.replace(/\/$/, "")}/tasks/00000000-0000-0000-0000-000000000001`,
+    projectUrl: general
+      ? ""
+      : `${siteUrl.replace(/\/$/, "")}/projects/00000000-0000-0000-0000-000000000002`,
     recipientName: "علی رضایی",
     type: general ? "اعلان" : project ? "پروژه" : "وظیفه",
     title: general ? "" : project ? "راه‌اندازی سامانه" : "بررسی گزارش",

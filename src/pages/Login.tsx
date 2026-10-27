@@ -1,6 +1,7 @@
+import { safeReturnTo, authDestination } from "../lib/returnTo";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { api, useMutateMutation, signedIn, errorText } from "../store";
 import { Card, Field, input, button, ErrorBox } from "../components/ui";
 import ThemeToggle from "../components/ThemeToggle";
@@ -9,6 +10,10 @@ export default function Login() {
   const demo = import.meta.env.VITE_DEMO_MODE === "true";
   const [login, { isLoading }] = useMutateMutation(),
     [error, setError] = useState("");
+  const location = useLocation();
+  const returnTo = safeReturnTo(
+    new URLSearchParams(location.search).get("returnTo"),
+  );
   const dispatch = useDispatch(),
     navigate = useNavigate();
   return (
@@ -39,7 +44,12 @@ export default function Login() {
               }).unwrap();
               dispatch(api.util.resetApiState());
               dispatch(signedIn(result));
-              navigate(result.user.contextRequired ? "/select-context" : "/", { replace: true });
+              navigate(
+                result.user.contextRequired
+                  ? authDestination("/select-context", returnTo)
+                  : returnTo,
+                { replace: true },
+              );
             } catch (err) {
               setError(errorText(err));
             }

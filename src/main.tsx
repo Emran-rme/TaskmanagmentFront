@@ -1,11 +1,18 @@
 import React, { lazy, Suspense } from "react";
 import ReactDOM from "react-dom/client";
 import { Provider, useSelector } from "react-redux";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 import { store, RootState } from "./store";
 import Layout from "./components/Layout";
 import { Loading } from "./components/ui";
 import "./index.css";
+import { safeReturnTo, authDestination } from "./lib/returnTo";
 if ("serviceWorker" in navigator)
   navigator.serviceWorker.register("/sw.js").catch(console.error);
 const ContextSelect = lazy(() => import("./pages/ContextSelect"));
@@ -29,13 +36,25 @@ const Login = lazy(() => import("./pages/Login")),
   Trash = lazy(() => import("./pages/Trash"));
 function Protected() {
   const { token, user } = useSelector((s: RootState) => s.auth);
-  if (!token) return <Navigate to="/login" replace />;
-  if (user?.contextRequired) return <Navigate to="/select-context" replace />;
+  const location = useLocation();
+  const target = safeReturnTo(location.pathname);
+  if (!token)
+    return <Navigate to={authDestination("/login", target)} replace />;
+  if (user?.contextRequired)
+    return <Navigate to={authDestination("/select-context", target)} replace />;
   return <Layout />;
 }
 function ContextRoute() {
   const token = useSelector((s: RootState) => s.auth.token);
-  return token ? <ContextSelect /> : <Navigate to="/login" replace />;
+  const location = useLocation();
+  const target = safeReturnTo(
+    new URLSearchParams(location.search).get("returnTo"),
+  );
+  return token ? (
+    <ContextSelect />
+  ) : (
+    <Navigate to={authDestination("/login", target)} replace />
+  );
 }
 function App() {
   return (

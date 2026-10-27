@@ -1,6 +1,7 @@
+import { safeReturnTo } from "../lib/returnTo";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   api,
   signedIn,
@@ -25,11 +26,18 @@ export default function ContextSelect() {
   const [company, setCompany] = useState("");
   const [step, setStep] = useState(2);
   const [message, setMessage] = useState("");
+  const location = useLocation();
+  const returnTo = safeReturnTo(
+    new URLSearchParams(location.search).get("returnTo"),
+  );
   const dispatch = useDispatch(),
     navigate = useNavigate();
   if (error) return <ErrorBox message={errorText(error)} />;
   if (!data) return <Loading />;
-  if (!data.roles.length) return <ErrorBox message="نقشی برای این حساب تعریف نشده است؛ با مدیر سامانه تماس بگیرید." />;
+  if (!data.roles.length)
+    return (
+      <ErrorBox message="نقشی برای این حساب تعریف نشده است؛ با مدیر سامانه تماس بگیرید." />
+    );
   const role =
     data.roles.find((r: any) => (r.id || "legacy") === selected) ||
     data.roles[0];
@@ -62,14 +70,15 @@ export default function ContextSelect() {
               }).unwrap();
               dispatch(api.util.resetApiState());
               dispatch(signedIn(result));
-              navigate("/", { replace: true });
+              navigate(returnTo, { replace: true });
             } catch (err) {
               setMessage(errorText(err));
             }
           }}
         >
           <p className="text-xs leading-6 text-slate-500">
-            فقط نقش‌ها و شرکت‌هایی که مدیر سامانه برای حساب شما تعیین کرده نمایش داده می‌شوند.
+            فقط نقش‌ها و شرکت‌هایی که مدیر سامانه برای حساب شما تعیین کرده نمایش
+            داده می‌شوند.
           </p>
           {step === 2 ? (
             <Field label="نقش‌های مجاز این حساب">
@@ -95,21 +104,48 @@ export default function ContextSelect() {
               name="company"
               disabled={isLoading}
               valueKey="id"
-              value={(company || role.companies[0]) === "*" ? "all-companies" : role.companyTree?.find((node: any) => node.name === (company || role.companies[0]))?.id || ""}
-              onChange={(id) => setCompany(id === "all-companies" ? "*" : role.companyTree.find((node: any) => node.id === id)?.name || "")}
+              value={
+                (company || role.companies[0]) === "*"
+                  ? "all-companies"
+                  : role.companyTree?.find(
+                      (node: any) =>
+                        node.name === (company || role.companies[0]),
+                    )?.id || ""
+              }
+              onChange={(id) =>
+                setCompany(
+                  id === "all-companies"
+                    ? "*"
+                    : role.companyTree.find((node: any) => node.id === id)
+                        ?.name || "",
+                )
+              }
               nodes={[
                 ...(role.companies.includes("*")
-                  ? [{ id: "all-companies", name: "کل گروه / همه شرکت‌ها", type: "گروه", parentId: null }]
+                  ? [
+                      {
+                        id: "all-companies",
+                        name: "کل گروه / همه شرکت‌ها",
+                        type: "گروه",
+                        parentId: null,
+                      },
+                    ]
                   : []),
                 ...(role.companyTree || []).map((node: any) => ({
                   ...node,
-                  parentId: node.parentId || (role.companies.includes("*") ? "all-companies" : null),
+                  parentId:
+                    node.parentId ||
+                    (role.companies.includes("*") ? "all-companies" : null),
                 })),
               ]}
               allowedIds={[
                 ...(role.companies.includes("*") ? ["all-companies"] : []),
                 ...(role.companyTree || [])
-                  .filter((node: any) => role.companies.includes(node.name) && ["شرکت مادر", "شرکت تابعه"].includes(node.type))
+                  .filter(
+                    (node: any) =>
+                      role.companies.includes(node.name) &&
+                      ["شرکت مادر", "شرکت تابعه"].includes(node.type),
+                  )
                   .map((node: any) => node.id),
               ]}
             />
