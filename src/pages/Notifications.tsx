@@ -22,6 +22,13 @@ export default function Notifications() {
       <h1 className="text-xl font-bold text-navy dark:text-sky-50">
         مرکز اعلان‌ها
       </h1>
+      {!window.isSecureContext && (
+        <ErrorBox message="اعلان گوشی و سیستم به اتصال HTTPS معتبر نیاز دارد؛ سامانه را با نشانی امن باز کنید." />
+      )}
+      <p className="text-sm text-slate-500">
+        در هر دستگاه، اعلان مرورگر را یک بار فعال کنید. در آیفون (iOS 16.4 به
+        بالا) ابتدا سامانه را با Add to Home Screen نصب و از آیکون آن باز کنید.
+      </p>
       {typeof Notification !== "undefined" && (
         <button
           className={secondary}
@@ -30,12 +37,34 @@ export default function Notifications() {
             setEnablingPush(true);
             setBrowserStatus("");
             try {
+              if (
+                !window.isSecureContext ||
+                !("serviceWorker" in navigator) ||
+                !("PushManager" in window)
+              )
+                throw new Error(
+                  "این مرورگر یا نشانی از اعلان پشتیبانی نمی‌کند؛ از HTTPS و مرورگر پشتیبانی‌شده استفاده کنید.",
+                );
               const result = await Notification.requestPermission();
               if (result !== "granted")
                 throw new Error(
                   "اعلان مرورگر مجاز نشد؛ مجوز را از تنظیمات مرورگر فعال کنید.",
                 );
-              const registration = await navigator.serviceWorker.ready;
+              await navigator.serviceWorker.register("/sw.js");
+              const registration = await Promise.race([
+                navigator.serviceWorker.ready,
+                new Promise<never>((_, reject) =>
+                  setTimeout(
+                    () =>
+                      reject(
+                        new Error(
+                          "فعال‌سازی سرویس اعلان طول کشید؛ صفحه را بازخوانی کنید.",
+                        ),
+                      ),
+                    15000,
+                  ),
+                ),
+              ]);
               const response = await fetch("/api/push/key", {
                 headers: {
                   authorization: "Bearer " + store.getState().auth.token,
@@ -51,8 +80,19 @@ export default function Notifications() {
                 ),
                 (c) => c.charCodeAt(0),
               );
+              let existing = await registration.pushManager.getSubscription();
+              const previousKey = existing?.options.applicationServerKey;
+              if (
+                existing &&
+                (!previousKey ||
+                  Array.from(new Uint8Array(previousKey)).join() !==
+                    Array.from(key).join())
+              ) {
+                await existing.unsubscribe();
+                existing = null;
+              }
               const subscription =
-                (await registration.pushManager.getSubscription()) ||
+                existing ||
                 (await registration.pushManager.subscribe({
                   userVisibleOnly: true,
                   applicationServerKey: key,

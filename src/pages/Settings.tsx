@@ -92,7 +92,7 @@ export default function Settings() {
       ) : tab === "sms" ? (
         <Card title="ماژول‌های پیامک">
           <p className="mb-4 text-sm leading-8 text-slate-500 dark:text-slate-400">
-            کاوه‌نگار و درگاه عمومی از بخش مدیریت ماژول‌ها اضافه و تنظیم
+            رهیاب، کاوه‌نگار و درگاه عمومی از بخش مدیریت ماژول‌ها اضافه و تنظیم
             می‌شوند. ماژول فعال، پیامک‌های وظایف و یادآوری را از صف ارسال دریافت
             می‌کند.
           </p>
@@ -104,7 +104,7 @@ export default function Settings() {
             )?.name || "انتخاب نشده"}
           </p>
           <Link className={button} to="/modules">
-            مدیریت ماژول‌ها و تنظیم کاوه‌نگار
+            مدیریت ماژول‌ها و تنظیم رهیاب
           </Link>
         </Card>
       ) : integrations.error ? (
@@ -134,6 +134,7 @@ function Workflow({
     reminder: number;
   };
 }) {
+  const admin = useSelector((s: RootState) => s.auth.user?.role === "Admin");
   const [mutate, { isLoading }] = useMutateMutation();
   const [feedback, setFeedback] = useState({ error: "", message: "" });
   return (
@@ -149,7 +150,7 @@ function Workflow({
             method: "PUT",
             body: {
               email: f.has("email"),
-              sms: f.has("sms"),
+              sms: admin ? f.has("sms") : settings.sms,
               inApp: f.has("inApp"),
               approval: f.has("approval"),
               reminder: Number(f.get("reminder")),
@@ -172,15 +173,17 @@ function Workflow({
             ["inApp", "اعلان درون‌برنامه‌ای", "نمایش در مرکز اعلان‌های سامانه"],
             ["email", "اعلان ایمیلی", "ارسال از طریق سرور SMTP تنظیم‌شده"],
             ["sms", "اعلان پیامکی", "ارسال از طریق درگاه HTTPS تنظیم‌شده"],
-          ].map(([name, label, description]) => (
-            <SettingsToggle
-              key={name}
-              name={name}
-              label={label}
-              description={description}
-              defaultChecked={settings[name as "email" | "sms" | "inApp"]}
-            />
-          ))}
+          ]
+            .filter(([name]) => name !== "sms" || admin)
+            .map(([name, label, description]) => (
+              <SettingsToggle
+                key={name}
+                name={name}
+                label={label}
+                description={description}
+                defaultChecked={settings[name as "email" | "sms" | "inApp"]}
+              />
+            ))}
         </div>
       </Card>
       <Card title="قواعد ارزیابی و یادآوری">
