@@ -253,27 +253,69 @@ function ModuleForm({
             setDirty(false);
         }}
       >
+        {definition.id === "sms-rahyab" && (
+          <div className="rounded-xl bg-sky-50 p-4 text-sm leading-7 dark:bg-sky-950/50">
+            <p className="font-bold">متن پیامک پارامتریک</p>
+            <p>
+              پارامترها را دقیقاً با آکولاد وارد کنید؛ پیش‌نمایش با داده نمونه
+              است و پیامکی ارسال نمی‌کند. تاریخ مهلت شمسی است. قالب خالی، متن
+              قبلی سامانه را ارسال می‌کند.
+            </p>
+            <p className="mt-2" dir="ltr">
+              {smsTemplateParameters.join(" · ")}
+            </p>
+            <p>
+              نام گیرنده، نوع، عنوان، کد، نام پروژه، مهلت، وضعیت، شرکت و متن
+              اصلی پیام. نام پروژه برای وظیفه مستقل خالی است؛ پیام عمومی فقط نام
+              گیرنده، نوع و متن اصلی را دارد.
+            </p>
+            <p className="mt-2">
+              نمونه:{" "}
+              {
+                "{recipientName} عزیز، {type} «{title}» با کد {code}؛ مهلت: {dueDate}. {message}"
+              }
+            </p>
+          </div>
+        )}
         {definition.fields.map((f) => (
           <div key={f.key}>
             <Field label={f.label}>
-              <input
-                className={input}
-                dir="ltr"
-                type={f.type}
-                value={values[f.key] || ""}
-                autoComplete={f.type === "password" ? "new-password" : "off"}
-                required={enabled && f.required && !installed.secrets[f.key]}
-                placeholder={
-                  installed.secrets[f.key]
-                    ? "ذخیره شده؛ خالی یعنی حفظ مقدار قبلی"
-                    : ""
-                }
-                onChange={(e) => {
-                  setValues((v) => ({ ...v, [f.key]: e.target.value }));
-                  setDirty(true);
-                }}
-              />
+              {f.type === "textarea" ? (
+                <textarea
+                  className={input}
+                  dir="rtl"
+                  rows={4}
+                  maxLength={1500}
+                  value={values[f.key] || ""}
+                  placeholder="{message}"
+                  onChange={(e) => {
+                    setValues((v) => ({ ...v, [f.key]: e.target.value }));
+                    setDirty(true);
+                  }}
+                />
+              ) : (
+                <input
+                  className={input}
+                  dir="ltr"
+                  type={f.type}
+                  value={values[f.key] || ""}
+                  autoComplete={f.type === "password" ? "new-password" : "off"}
+                  required={enabled && f.required && !installed.secrets[f.key]}
+                  placeholder={
+                    installed.secrets[f.key]
+                      ? "ذخیره شده؛ خالی یعنی حفظ مقدار قبلی"
+                      : ""
+                  }
+                  onChange={(e) => {
+                    setValues((v) => ({ ...v, [f.key]: e.target.value }));
+                    setDirty(true);
+                  }}
+                />
+              )}
             </Field>
+            {definition.id === "sms-rahyab" && f.type === "textarea" && (
+              <SmsTemplatePreview value={values[f.key] || ""} kind={f.key} />
+            )}
             {f.hint && (
               <p className="mt-2 text-xs leading-6 text-slate-500 dark:text-slate-400">
                 {f.hint}
@@ -381,5 +423,54 @@ function ModuleForm({
         </p>
       )}
     </Card>
+  );
+}
+
+const smsTemplateParameters = [
+  "{recipientName}",
+  "{type}",
+  "{title}",
+  "{code}",
+  "{projectName}",
+  "{dueDate}",
+  "{status}",
+  "{company}",
+  "{message}",
+];
+function SmsTemplatePreview({ value, kind }: { value: string; kind: string }) {
+  const project = kind === "projectTemplate";
+  const general = kind === "generalTemplate";
+  const sample: Record<string, string> = {
+    recipientName: "علی رضایی",
+    type: general ? "اعلان" : project ? "پروژه" : "وظیفه",
+    title: general ? "" : project ? "راه‌اندازی سامانه" : "بررسی گزارش",
+    code: general ? "" : project ? "PR-100" : "TK-100",
+    projectName: general ? "" : "راه‌اندازی سامانه",
+    dueDate: general ? "" : "۱۴۰۵/۰۸/۱۵",
+    status: general ? "" : project ? "فعال" : "جدید",
+    company: general ? "" : "شرکت نمونه",
+    message: general
+      ? "اعلان جدید سامانه"
+      : project
+        ? "پروژه PR-100 به شما محول شد."
+        : "TK-100 · ایجاد وظیفه · جدید",
+  };
+  const preview = (value.trim() || "{message}").replace(
+    /\{([^{}]+)\}/g,
+    (token, key: string) => sample[key] ?? token,
+  );
+  return (
+    <div
+      className="mt-2 rounded-lg border border-slate-200 p-3 text-sm dark:border-slate-700"
+      aria-live="polite"
+    >
+      <p className="mb-1 text-xs text-slate-500">پیش‌نمایش با داده نمونه</p>
+      <p className="whitespace-pre-wrap break-words" dir="rtl">
+        {preview}
+      </p>
+      <p className="mt-2 text-xs text-slate-500">
+        {value.length} / ۱۵۰۰ نویسه قالب
+      </p>
+    </div>
   );
 }
