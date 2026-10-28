@@ -1,4 +1,6 @@
 import { insertSmsParameter } from "../lib/smsParameterInsertion";
+import { notifyError } from "../lib/toasts";
+import { toast } from "react-toastify";
 import { useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
@@ -45,6 +47,7 @@ export default function Modules() {
       data.catalog.find((d) => d.id === m.id)?.capability === "sms",
   );
   const activeDefinition = data.catalog.find((m) => m.id === active?.id);
+  const activeEmail = data.installed.find(m => m.enabled && data.catalog.find(d => d.id === m.id)?.capability === "email");
   async function action(url: string, method = "POST", body?: unknown) {
     setFeedback({ error: "", message: "" });
     try {
@@ -59,6 +62,7 @@ export default function Modules() {
           (result?.message || "ماژول حذف شد و قابل بازیابی است.") +
           (result?.reference ? " شناسه پیام: " + result.reference : ""),
       });
+      toast.success(result?.message || "عملیات انجام شد.");
       return true;
     } catch (e) {
       setFeedback({ error: errorText(e), message: "" });
@@ -107,6 +111,18 @@ export default function Modules() {
           فعال است؛ در صورت خطا، ارسال به ارائه‌دهنده دیگری منتقل نمی‌شود.
         </p>
       </Card>
+      <Card title="مسیر اجرای ایمیل در گردش کار">
+        <p className="text-sm leading-8 text-slate-600 dark:text-slate-300">
+          وظیفه، تخصیص پروژه و یادآوری ← صف اعلان‌ها ← ماژول SMTP
+        </p>
+        <p className="mt-3 text-xs leading-7 text-slate-500 dark:text-slate-400">
+          {activeEmail ? data.emailWorkflowEnabled
+            ? "ماژول ایمیل فعال و به اعلان‌های گردش کار متصل است."
+            : "ماژول فعال است اما کانال ایمیل در تنظیمات گردش کار خاموش است."
+            : "ماژول اطلاع‌رسانی ایمیلی را اضافه کنید، تنظیمات SMTP را ذخیره و ارسال آزمایشی را بررسی کنید؛ سپس آن را فعال کنید."}
+          {" "}ایمیل و پیامک مستقل هستند. نتیجه ارسال و تلاش مجدد در مرکز اعلان‌ها قابل پیگیری است.
+        </p>
+      </Card>
       <div aria-live="polite">
         {feedback.error && <ErrorBox message={feedback.error} />}{" "}
         {feedback.message && (
@@ -149,7 +165,7 @@ export default function Modules() {
                 <p className="mb-4 text-xs text-brand dark:text-sky-300">
                   {def.capability === "workflow"
                     ? "اتصال به رویدادهای گردش کار"
-                    : "ارائه‌دهنده پیامک"}
+                    : def.capability === "email" ? "ارائه‌دهنده ایمیل" : "ارائه‌دهنده پیامک"}
                 </p>
                 <button
                   disabled={!!installed || isLoading}
@@ -216,7 +232,11 @@ export function ModuleForm({
   action: (url: string, method?: string, body?: unknown) => Promise<boolean>;
 }) {
   const [enabled, setEnabled] = useState(installed.enabled);
-  const [values, setValues] = useState(installed.values);
+  const email = definition.capability === "email";
+  const [values, setValues] = useState<Record<string, string>>(() => ({
+    ...(email ? { port: "587", startTls: "true", subject: "اعلان مدیریت وظایف", fromName: "مدیریت وظایف" } : {}),
+    ...installed.values,
+  }));
   const [events, setEvents] = useState(installed.events || []);
   const [phone, setPhone] = useState("");
   const [dirty, setDirty] = useState(false);
@@ -257,7 +277,11 @@ export function ModuleForm({
         {definition.fields.map((f) => (
           <div key={f.key}>
             <Field label={f.label}>
-              {f.type === "textarea" ? (
+              {email && f.key === "startTls" ? (
+                <SettingsToggle label="استفاده از اتصال امن" description="برای سرورهای SMTP دارای STARTTLS روشن باشد."
+                  checked={values.startTls !== "false"}
+                  onChange={(checked) => { setValues(v => ({ ...v, startTls: String(checked) })); setDirty(true); }} />
+              ) : f.type === "textarea" ? (
                 <SmsTemplateEditor
                   label={f.label}
                   value={values[f.key] || ""}
@@ -286,7 +310,7 @@ export function ModuleForm({
                 />
               )}
             </Field>
-            {definition.id === "sms-rahyab" && f.type === "textarea" && (
+            {(definition.id === "sms-rahyab" || email) && f.type === "textarea" && (
               <SmsTemplatePreview
                 value={values[f.key] || ""}
                 kind={f.key}
@@ -332,6 +356,7 @@ export function ModuleForm({
           description={
             definition.capability === "workflow"
               ? "این ماژول برای رویدادهای انتخاب‌شده اجرا می‌شود؛ مستقل از کانال پیامک."
+              : email ? "این ماژول برای ایمیل‌های وظیفه، تخصیص پروژه و یادآوری‌ها استفاده می‌شود؛ مستقل از پیامک."
               : "این ماژول برای پیامک‌های تخصیص وظیفه، پروژه و یادآوری‌ها استفاده می‌شود."
           }
           checked={enabled}
@@ -365,16 +390,16 @@ export function ModuleForm({
           </button>
         </div>
       </form>
-      {definition.capability === "sms" ? (
+      {definition.capability === "sms" || email ? (
         <div className="mt-6 space-y-3 border-t border-white/80 dark:border-white/10 pt-5">
-          <Field label="موبایل گیرنده آزمایشی">
+          <Field label={email ? "ایمیل گیرنده آزمایشی" : "موبایل گیرنده آزمایشی"}>
             <input
               className={input}
               dir="ltr"
-              type="tel"
+              type={email ? "email" : "tel"}
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="0912…"
+              placeholder={email ? "name@example.com" : "0912…"}
             />
           </Field>
           <button
@@ -385,12 +410,11 @@ export function ModuleForm({
             }
           >
             <Send size={16} />
-            ارسال پیامک آزمایشی
+            {email ? "ارسال ایمیل آزمایشی" : "ارسال پیامک آزمایشی"}
           </button>
           <p className="text-xs leading-7 text-slate-500 dark:text-slate-400">
-            ارسال آزمایشی واقعی است و ممکن است هزینه داشته باشد؛ ابتدا تنظیمات
-            را ذخیره کنید. موبایل کاربران را در پرونده پرسنلی یا تنظیمات ←
-            گیرندگان ثبت کنید.
+            {email ? "ابتدا تنظیمات را ذخیره کنید. ارسال آزمایشی واقعی است. ایمیل کاربران را در پرونده پرسنلی یا تنظیمات ← گیرندگان ثبت کنید."
+              : "ارسال آزمایشی واقعی است و ممکن است هزینه داشته باشد؛ ابتدا تنظیمات را ذخیره کنید. موبایل کاربران را در پرونده پرسنلی یا تنظیمات ← گیرندگان ثبت کنید."}
           </p>
         </div>
       ) : (
@@ -446,7 +470,9 @@ function SmsTemplateEditor({
         node?.setSelectionRange(result.caret, result.caret);
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "درج پارامتر ناموفق بود.");
+      const message = err instanceof Error ? err.message : "درج پارامتر ناموفق بود.";
+      setError(message);
+      notifyError(message);
     }
   }
   return (

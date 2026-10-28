@@ -13,6 +13,8 @@ import Layout from "./components/Layout";
 import { Loading } from "./components/ui";
 import "./index.css";
 import { safeReturnTo, authDestination } from "./lib/returnTo";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 if ("serviceWorker" in navigator)
   navigator.serviceWorker.register("/sw.js").catch(console.error);
 const ContextSelect = lazy(() => import("./pages/ContextSelect"));
@@ -90,6 +92,7 @@ function App() {
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <Provider store={store}>
+      <ToastContainer position="top-center" theme="colored" rtl limit={3} newestOnTop pauseOnHover closeOnClick />
       <BrowserRouter>
         <App />
       </BrowserRouter>

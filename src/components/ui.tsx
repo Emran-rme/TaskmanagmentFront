@@ -1,5 +1,6 @@
 import {
   useId,
+  useEffect,
   isValidElement,
   cloneElement,
   type ReactNode,
@@ -8,6 +9,7 @@ import {
 import { Link } from "react-router-dom";
 import type { Task } from "../lib/types";
 import { jalali, fa } from "../lib/jalali";
+import { notifyError } from "../lib/toasts";
 export const input =
   "ui-input w-full rounded-2xl border border-white/80 dark:border-white/10 bg-white/80 dark:bg-slate-800/80 px-3 py-2.5 text-sm text-navy dark:text-sky-50 shadow-sm outline-none focus:border-brand focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-800";
 export const button =
@@ -134,6 +136,7 @@ export function Loading() {
   );
 }
 export function ErrorBox({ message }: { message: string }) {
+  useEffect(() => { notifyError(message); }, [message]);
   return (
     <p
       role="alert"

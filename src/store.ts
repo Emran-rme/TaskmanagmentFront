@@ -4,6 +4,7 @@ import { setupListeners } from "@reduxjs/toolkit/query";
 import type { User, Workspace, DashboardData } from "./lib/types";
 import type { IntegrationResponse } from "./lib/integrations";
 import type { ModulesResponse } from "./lib/modules";
+import { notifyError } from "./lib/toasts";
 export interface DeletedRecord {
   entity: string;
   id: string;
@@ -58,6 +59,7 @@ export const api = createApi({
             await import("./mocks/api")
           ).mockQuery(args, apiContext, extraOptions)
         : await authenticatedQuery(args, apiContext, extraOptions);
+    if (result.error) notifyError(errorText(result.error));
     if (
       result.error?.status === 401 &&
       (typeof args === "string" ? args : args.url) !== "auth/login"
@@ -194,9 +196,13 @@ export const {
   useMutateMutation,
 } = api;
 export const errorText = (e: any) =>
+  e?.data?.message ||
   e?.data?.detail ||
   e?.data?.title ||
-  e?.data?.message ||
+  (e?.status === 401 ? "احراز هویت ناموفق است؛ اطلاعات ورود یا اعتبار نشست را بررسی کنید." :
+   e?.status === 403 ? "اجازه انجام این عملیات را ندارید." :
+   e?.status === "FETCH_ERROR" ? "اتصال به سرور برقرار نشد؛ اتصال شبکه را بررسی کنید." :
+   e?.status === "TIMEOUT_ERROR" ? "مهلت پاسخ سرور تمام شد؛ دوباره تلاش کنید." : "") ||
   "عملیات ناموفق بود. اتصال و دسترسی را بررسی کنید.";
 export const can = (u: User | null, p: string, company?: string) =>
   !!u &&

@@ -27,4 +27,5 @@ export interface ModulesResponse {
   installed: ModuleInstallation[];
   deleted: { id: string; deletedAt: string; deletedBy: number }[];
   smsWorkflowEnabled: boolean;
+  emailWorkflowEnabled?: boolean;
 }
