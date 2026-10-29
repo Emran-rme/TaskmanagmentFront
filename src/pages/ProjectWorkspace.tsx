@@ -1,6 +1,6 @@
 import { lazy } from "react";
 import { Link, NavLink, Routes, Route, useParams } from "react-router-dom";
-import { useWorkspaceQuery, can, type RootState } from "../store";
+import { useWorkspaceQuery, canProject, canManageProject, type RootState } from "../store";
 import { useSelector } from "react-redux";
 import {
   ArrowRight,
@@ -33,7 +33,7 @@ export default function ProjectWorkspace() {
     { path: "gantt", label: "گانت چارت", Icon: Rows3 },
     { path: "kanban", label: "کانبان پروژه", Icon: FolderKanban },
     { path: "calendar", label: "تقویم", Icon: CalendarDays },
-    ...(user?.role === "Admin" || user?.id === project.managerId ? [{path:"members",label:"تنظیمات اعضا",Icon:ListTodo}] : []),
+    ...(canManageProject(user, project, w) ? [{path:"members",label:"تنظیمات اعضا",Icon:ListTodo}] : []),
   ];
   return (
     <div className="overview-page space-y-5">
@@ -42,7 +42,7 @@ export default function ProjectWorkspace() {
         title={project.name}
         subtitle={`${project.company} · ${project.unit}`}
         action={
-          can(user, "tasks.write", project.company) && (
+          canProject(user, "tasks.write", project.company, project.id, w) && (
             <Link className={button} to={`/tasks/new?projectId=${project.id}`}>
               <Plus size={16} />
               افزودن وظیفه
@@ -57,7 +57,7 @@ export default function ProjectWorkspace() {
         <nav className="overview-tabs" aria-label="نماهای پروژه">
           {tabs
             .filter(
-              (tab) => !tab.path || can(user, "tasks.read", project.company),
+              (tab) => !tab.path || tab.path === "members" || canProject(user, "tasks.read", project.company, project.id, w),
             )
             .map(({ path, label, Icon }) => (
               <NavLink
@@ -73,7 +73,7 @@ export default function ProjectWorkspace() {
         </nav>
       </OverviewHero>
       <Routes>
-        <Route path="members" element={user?.role === "Admin" || user?.id === project.managerId ? <ProjectMembers project={project}/> : <ErrorBox message="مدیریت اعضا در اختیار مدیر پروژه است."/>}/>
+        <Route path="members" element={canManageProject(user, project, w) ? <ProjectMembers project={project}/> : <ErrorBox message="مدیریت اعضا در اختیار مدیر پروژه است."/>}/>
         <Route
           index
           element={<DashboardViews workspace={w} project={project} />}

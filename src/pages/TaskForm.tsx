@@ -10,6 +10,9 @@ import {
   RootState,
   can,
   manages,
+  canProject,
+  canEditTask,
+  canReassignTask,
   useWorkspaceQuery,
   useMutateMutation,
   errorText,
@@ -60,7 +63,7 @@ export default function TaskForm() {
   if (id && !editing) return <ErrorBox message="وظیفه یافت نشد." />;
   const requestedProjectId = projectId || editing?.projectId;
   const selectedProject = w.projects.find(
-    (p) => p.id === requestedProjectId && can(user, "tasks.write", p.company),
+    (p) => p.id === requestedProjectId && canProject(user, "tasks.write", p.company, p.id, w),
   );
   const taskCompany =
     selectedProject?.company ||
@@ -82,6 +85,10 @@ export default function TaskForm() {
     return <ErrorBox message="پروژه یافت نشد یا مجوز ثبت وظیفه ندارید." />;
   if (!can(user, "tasks.write", taskCompany))
     return <ErrorBox message="مجوز ثبت وظیفه ندارید." />;
+  if (editing && !canEditTask(user, editing, w))
+    return <ErrorBox message="مجوز ویرایش این وظیفه را ندارید." />;
+  const mayReassign = editing ? canReassignTask(user, editing, w)
+    : user?.role === "Admin" || (project.id ? project.managerId === user?.id : manages(user, project.company));
   const organization = w.organization?.length
     ? w.organization
     : w.companies.map((name) => ({
@@ -107,7 +114,7 @@ export default function TaskForm() {
           (m) => m.projectId === project.id && m.userId === person.id,
         )) &&
       person.companies?.includes(project.company) &&
-      (manages(user, project.company) ||
+      (mayReassign ||
         (editing
           ? assignedIds(editing).includes(person.id)
           : person.id === user?.id)),
@@ -117,7 +124,7 @@ export default function TaskForm() {
       person.enabled !== false &&
       (!!project.id || person.role === "Manager" || person.role === "Admin") &&
       (!editing ||
-        manages(user, project.company) ||
+        editing.approverId === user?.id ||
         person.id === editing.approverId) &&
       (person.role === "Admin" ||
         person.companies?.includes(project.company) ||
@@ -282,7 +289,7 @@ export default function TaskForm() {
                             { id: "", name: "بدون پروژه (وظیفه مستقل)" },
                             ...w.projects
                               .filter((p) =>
-                                can(user, "tasks.write", p.company),
+                                canProject(user, "tasks.write", p.company, p.id, w),
                               )
                               .map((p) => ({
                                 id: p.id,
@@ -486,8 +493,7 @@ export default function TaskForm() {
                           (task.projectId || "") === project.id &&
                           task.company === taskCompany &&
                           task.status !== "بسته شده" &&
-                          (manages(user, task.company) ||
-                            assignedIds(task).includes(user?.id || 0)),
+                          canEditTask(user, task, w),
                       )
                       .map((task) => (
                         <option key={task.id} value={task.id}>

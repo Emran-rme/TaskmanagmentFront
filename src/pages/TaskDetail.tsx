@@ -26,7 +26,8 @@ import {
   useMutateMutation,
   errorText,
   can,
-  manages,
+  canEditTask,
+  canCloseTask,
 } from "../store";
 import {
   Card,
@@ -58,13 +59,9 @@ export default function TaskDetail() {
   if (!d || !w) return <Loading />;
   const task = d.task as Task;
   const project = w.projects.find((project) => project.id === task.projectId);
-  const canParticipate =
-    can(user, "tasks.write", task.company) &&
-    (manages(user, task.company) ||
-      assignedIds(task).includes(user?.id || 0) ||
-      task.approverId === user?.id);
+  const canParticipate = canEditTask(user, task, w);
   const editable = canParticipate && task.status !== "بسته شده";
-  const reviewer = user?.role === "Admin" || task.approverId === user?.id;
+  const reviewer = canCloseTask(user, task, w);
   async function send(url: string, body: unknown, method = "POST") {
     E("");
     S("");
@@ -436,8 +433,7 @@ export default function TaskDetail() {
                             ))}
                           </select>
                         </Field>
-                        {(user?.role === "Admin" ||
-                          task.approverId === user?.id) && (
+                        {reviewer && (
                           <label className="flex items-center gap-2 text-sm">
                             <input type="checkbox" name="accept" />
                             تأیید تحویل و تکمیل وظیفه

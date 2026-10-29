@@ -204,11 +204,4 @@ export const errorText = (e: any) =>
    e?.status === "FETCH_ERROR" ? "اتصال به سرور برقرار نشد؛ اتصال شبکه را بررسی کنید." :
    e?.status === "TIMEOUT_ERROR" ? "مهلت پاسخ سرور تمام شد؛ دوباره تلاش کنید." : "") ||
   "عملیات ناموفق بود. اتصال و دسترسی را بررسی کنید.";
-export const can = (u: User | null, p: string, company?: string) =>
-  !!u &&
-  (u.role === "Admin" ||
-    (company && u.companyPermissions
-      ? u.companyPermissions[company]?.includes(p)
-      : u.permissions.includes(p)));
-export const manages = (u: User | null, company: string) =>
-  !!u && (u.role === "Admin" || !!u.managedCompanies?.includes(company));
+export { can, manages, canProject, canEditTask, canCloseTask, canReassignTask, canManageProject } from "./lib/access";

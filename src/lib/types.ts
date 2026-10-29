@@ -112,6 +112,7 @@ export interface Settings {
   approval: boolean;
 }
 export interface Workspace {
+  projectPermissions?: Record<string, string[]>;
   projectMembers?: { projectId: string; userId: number; roleId: string }[];
   organization?: {
     id: string;

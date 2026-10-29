@@ -1,5 +1,5 @@
 import { useSelector } from "react-redux";
-import { RootState, can, manages } from "../store";
+import { RootState, can, canEditTask } from "../store";
 import TaskTree from "../components/TaskTree";
 import { useProjectWorkspace } from "../lib/useProjectWorkspace";
 import { useState } from "react";
@@ -289,10 +289,7 @@ export default function Tasks() {
                         جزئیات
                       </Link>
                       {t.status !== "بسته شده" &&
-                        can(actor, "tasks.write", t.company) &&
-                        (manages(actor, t.company) ||
-                          assignedIds(t).includes(actor?.id || 0) ||
-                          actor?.id === t.approverId) && (
+                        canEditTask(actor, t, w) && (
                           <Link
                             className={secondary + " mx-2 text-xs"}
                             to={"/tasks/" + t.id + "/edit"}

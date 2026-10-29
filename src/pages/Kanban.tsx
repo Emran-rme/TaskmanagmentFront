@@ -7,7 +7,8 @@ import {
   useColumnsQuery,
   useMutateMutation,
   RootState,
-  can,
+  canEditTask,
+  canManageProject,
   errorText,
 } from "../store";
 import { statuses, Task } from "../lib/types";
@@ -44,13 +45,18 @@ export default function Kanban() {
     ? custom
     : statuses.map((status) => ({ id: status, name: status, status }));
   const configurable =
-    project && (user?.role === "Admin" || project.managerId === user?.id);
+    project && canManageProject(user, project, w);
   const columnFor = (task: Task) =>
-    custom.find((c) => c.id === task.kanbanColumnId)?.id ||
+    custom.find((c) => c.id === task.kanbanColumnId && (c.status !== "بسته شده" || task.status === "بسته شده"))?.id ||
     columns.find((c) => c.status === task.status)?.id ||
     columns[0].id;
   async function move(task: Task, columnId: string) {
     if (moving.current || columnFor(task) === columnId) return;
+    if (!w || !canEditTask(user, task, w) || task.status === "بسته شده") return;
+    if (columns.find(c => c.id === columnId)?.status === "بسته شده") {
+      setError("بستن وظیفه فقط از مسیر تحویل و تأیید مالک/تأییدکننده انجام می‌شود.");
+      return;
+    }
     moving.current = true;
     try {
       setError("");
@@ -267,7 +273,7 @@ export default function Kanban() {
               const task = w.tasks.find(
                 (t) => t.id === taskId,
               );
-              if (task && task.status !== "بسته شده" && can(user, "tasks.write", task.company))
+              if (task && task.status !== "بسته شده" && canEditTask(user, task, w))
                 void move(task, column.id);
             }}
           >
@@ -287,7 +293,7 @@ export default function Kanban() {
                   <div
                     key={task.id}
                     draggable={
-                      can(user, "tasks.write", task.company) &&
+                      canEditTask(user, task, w) &&
                       task.status !== "بسته شده"
                     }
                     className="cursor-grab active:cursor-grabbing"
@@ -302,7 +308,7 @@ export default function Kanban() {
                     }}
                   >
                     <TaskCard task={task} draggable={false} />
-                    {can(user, "tasks.write", task.company) &&
+                    {canEditTask(user, task, w) &&
                       task.status !== "بسته شده" && (
                         <select
                           aria-label={"لیست " + task.code}
@@ -312,7 +318,7 @@ export default function Kanban() {
                           onChange={(e) => void move(task, e.target.value)}
                         >
                           {columns.map((c) => (
-                            <option key={c.id} value={c.id}>
+                            <option key={c.id} value={c.id} disabled={c.status === "بسته شده"}>
                               {c.name}
                             </option>
                           ))}

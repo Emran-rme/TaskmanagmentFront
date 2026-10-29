@@ -5,7 +5,7 @@ import Modal from "../components/Modal";
 import PersonPicker from "../components/PersonPicker";
 import OrganizationTreeSelect from "../components/OrganizationTreeSelect";
 import { useSelector } from "react-redux";
-import { RootState, can } from "../store";
+import { RootState, can, canProject, canManageProject } from "../store";
 import { useState, useRef, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import DeleteButton from "../components/DeleteButton";
@@ -377,7 +377,7 @@ export default function Projects() {
               title={p.name}
               action={
                 <div className="flex items-center gap-1">
-                  {can(actor, "projects.write", p.company) && (
+                  {canManageProject(actor, p, w) && (
                     <button
                       type="button"
                       className="project-icon-action"
@@ -457,7 +457,7 @@ export default function Projects() {
                     ورود به فضای پروژه
                   </Link>
                   {can(actor, "tasks.read", p.company) &&
-                    can(actor, "tasks.write", p.company) && (
+                    canProject(actor, "tasks.write", p.company, p.id, w) && (
                       <Link
                         className={secondary}
                         to={`/tasks/new?projectId=${p.id}`}
