@@ -12,6 +12,7 @@ import {
   ArrowLeft,
   ShieldCheck,
 } from "lucide-react";
+import WorkflowNodeDrawer from "../components/WorkflowNodeDrawer";
 import DeleteWorkflowDialog from "../components/DeleteWorkflowDialog";
 import WorkflowStageIcon from "../components/WorkflowStageIcon";
 import "../workflow.css";
@@ -532,11 +533,8 @@ export default function Workflows() {
                     setDirty(true);
                   }}
                 />
-                <aside
-                  className="workflow-inspector"
-                  aria-label="تخصیص و تنظیمات مرحله"
-                >
-                  {node ? (
+                {node && (
+                  <WorkflowNodeDrawer key={node.id} onClose={() => setSelected("")}>
                     <div className="workflow-properties">
                       <div
                         className={`workflow-inspector-heading workflow-kind-${node.kind}`}
@@ -783,19 +781,8 @@ export default function Workflows() {
                         )}
                       </fieldset>
                     </div>
-                  ) : (
-                    <div className="workflow-inspector-empty">
-                      <span className="workflow-empty-pointer">
-                        <MousePointer2 size={26} />
-                      </span>
-                      <strong>هر مرحله، تنظیمات خودش را دارد</strong>
-                      <p>
-                        یک نود را از نمودار انتخاب کنید یا با دکمه‌های بالا
-                        اضافه کنید تا تنظیمات آن اینجا نمایش داده شود.
-                      </p>
-                    </div>
-                  )}
-                </aside>
+                  </WorkflowNodeDrawer>
+                )}
               </div>
               <p className="workflow-canvas-help">
                 <MousePointer2 size={15} />

@@ -1270,3 +1270,41 @@
   font-size: 11px;
   color: var(--ink);
 }
+
+/* Keep the canvas full width; node settings open in a modal side drawer. */
+.workflow-page .workflow-editor-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+.workflow-inspector.workflow-node-drawer {
+  position: fixed;
+  inset: 0 0 0 auto;
+  width: min(440px, 100vw);
+  max-width: 100vw;
+  height: 100dvh;
+  max-height: 100dvh;
+  margin: 0;
+  padding: 0 0 24px;
+  border: 0;
+  border-left: 1px solid var(--line);
+  border-radius: 18px 0 0 18px;
+  color: var(--wf-node-ink);
+  box-shadow: -18px 0 60px #0003;
+  overscroll-behavior: contain;
+  animation: workflow-drawer-in 180ms ease-out;
+}
+.workflow-node-drawer::backdrop {
+  background: #0b10265c;
+  backdrop-filter: blur(2px);
+}
+.workflow-node-drawer .workflow-inspector-heading {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+@keyframes workflow-drawer-in {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .workflow-inspector.workflow-node-drawer { animation: none; }
+}
