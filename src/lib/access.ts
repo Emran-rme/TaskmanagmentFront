@@ -12,11 +12,11 @@ export const canProject = (u: User | null, permission: string, company: string,
 export const canEditTask = (u: User | null, t: Task, w: Workspace) =>
   canProject(u, "tasks.write", t.company, t.projectId, w)
   && (u?.role === "Admin" || t.approverId === u?.id || (t.assigneeIds?.length ? t.assigneeIds : [t.assigneeId]).includes(u?.id || 0)
-    || (t.projectId ? w.projects.some(p => p.id === t.projectId && p.managerId === u?.id) : manages(u, t.company)));
+    || !!t.projectId && w.projects.some(p => p.id === t.projectId && p.managerId === u?.id));
 export const canCloseTask = (u: User | null, t: Task, w: Workspace) =>
-  canProject(u, "tasks.write", t.company, t.projectId, w) && t.approverId === u?.id;
+  canProject(u, "tasks.write", t.company, t.projectId, w) && (u?.role === "Admin" || t.approverId === u?.id);
 export const canReassignTask = (u: User | null, t: Task, w: Workspace) =>
   canEditTask(u, t, w) && (u?.role === "Admin" || t.approverId === u?.id
-    || (t.projectId ? w.projects.some(p => p.id === t.projectId && p.managerId === u?.id) : manages(u, t.company)));
+    || !!t.projectId && w.projects.some(p => p.id === t.projectId && p.managerId === u?.id));
 export const canManageProject = (u: User | null, p: Project, w: Workspace) =>
   canProject(u, "projects.write", p.company, p.id, w) && (u?.role === "Admin" || p.managerId === u?.id);

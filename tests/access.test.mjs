@@ -4,9 +4,16 @@ import {canCloseTask,canEditTask,canProject,canManageProject} from "../src/lib/a
 const task={id:"task",projectId:"project",company:"C",assigneeId:1,assigneeIds:[1],approverId:2};
 const workspace={projects:[{id:"project",managerId:3,company:"C"}],projectPermissions:{project:["tasks.read","tasks.write","projects.write"]}};
 const user=(id,role="Member")=>({id,role,enabled:true,permissions:["tasks.read","tasks.write","projects.write"],companyPermissions:{C:["tasks.read","tasks.write","projects.write"]},managedCompanies:role==="Manager"?["C"]:[]});
-test("assignee cannot approve another owner's task, including Admin",()=>{
- for(const role of ["Admin","Manager","Member"]){assert.equal(canEditTask(user(1,role),task,workspace),true);assert.equal(canCloseTask(user(1,role),task,workspace),false);}
+test("non-admin assignee cannot approve another owner's task; Admin is exempt",()=>{
+ for(const role of ["Manager","Member"]){assert.equal(canEditTask(user(1,role),task,workspace),true);assert.equal(canCloseTask(user(1,role),task,workspace),false);}
+ assert.equal(canCloseTask(user(1,"Admin"),task,workspace),true);
  assert.equal(canCloseTask(user(2),task,workspace),true);
+});
+test("supervisors remain scoped to their own tasks, including standalone tasks",()=>{
+ assert.equal(canCloseTask(user(3,"Manager"),task,workspace),false);
+ assert.equal(canEditTask(user(4,"Manager"),{...task,projectId:null},workspace),false);
+ assert.equal(canCloseTask(user(2,"Manager"),{...task,projectId:null},workspace),true);
+ assert.equal(canCloseTask(user(2,"Manager"),{...task,approverId:3},workspace),false);
 });
 test("project grants and actual project ownership control buttons",()=>{
  assert.equal(canEditTask(user(4,"Manager"),task,workspace),false);

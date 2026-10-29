@@ -25,7 +25,6 @@ import {
   useWorkspaceQuery,
   useMutateMutation,
   errorText,
-  can,
   canEditTask,
   canCloseTask,
 } from "../store";
@@ -393,9 +392,10 @@ export default function TaskDetail() {
                         <PersonPicker
                           label="تأییدکننده"
                           name="approverId"
-                          users={w.users.filter((u) =>
-                            ["Admin", "Manager"].includes(u.role),
-                          )}
+                          users={w.users.filter((u) => user?.role === "Admin"
+                            ? ["Admin", "Manager"].includes(u.role) || u.id === task.approverId
+                            : u.id === task.approverId)}
+                          defaultValue={task.approverId}
                         />
                         <Field label="علت تمدید">
                           <textarea
@@ -524,7 +524,7 @@ export default function TaskDetail() {
                       </p>
                       {request.decisionNote && <p>{request.decisionNote}</p>}
                       {request.status === "pending" &&
-                        can(user, "tasks.write", task.company) &&
+                        reviewer &&
                         (user?.role === "Admin" ||
                           user?.id === request.approverId) && (
                           <div className="flex gap-2">

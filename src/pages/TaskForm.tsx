@@ -124,7 +124,7 @@ export default function TaskForm() {
       person.enabled !== false &&
       (!!project.id || person.role === "Manager" || person.role === "Admin") &&
       (!editing ||
-        editing.approverId === user?.id ||
+        user?.role === "Admin" || editing.approverId === user?.id ||
         person.id === editing.approverId) &&
       (person.role === "Admin" ||
         person.companies?.includes(project.company) ||
