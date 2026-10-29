@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { randomUuid } from "../lib/uuid";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import {
@@ -15,6 +16,8 @@ import {
   type FlowGraph,
   type FlowKind,
   flowLabels,
+  ports,
+  portLabels,
 } from "../lib/workflows";
 import {
   Card,
@@ -55,7 +58,7 @@ export default function Workflows() {
   }
   function create() {
     const d = {
-      id: crypto.randomUUID(),
+      id: randomUuid(),
       name: "گردش‌کار وظیفه",
       company: workspace!.companies[0] || "",
       projectId: null,
@@ -72,7 +75,7 @@ export default function Workflows() {
     if (!definition) return;
     open({
       ...definition,
-      id: crypto.randomUUID(),
+      id: randomUuid(),
       published: false,
       active: false,
       version: 0,
@@ -132,7 +135,11 @@ export default function Workflows() {
     <div className="workflow-page" dir="rtl">
       <div className="flex justify-between items-center">
         <h1>طراح گردش‌کار</h1>
-        <button className={button} onClick={create} disabled={isLoading}>
+        <button
+          className={button}
+          onClick={create}
+          disabled={isLoading || dirty}
+        >
           الگوی جدید
         </button>
       </div>
@@ -316,7 +323,7 @@ export default function Workflows() {
                       key={kind}
                       onClick={() => {
                         const n = {
-                          id: crypto.randomUUID(),
+                          id: randomUuid(),
                           kind,
                           label: flowLabels[kind],
                           x: 250,
@@ -338,174 +345,331 @@ export default function Workflows() {
                   ))}
                 </div>
               )}
-              <WorkflowCanvas
-                graph={graph}
-                editable={!readonly}
-                onSelect={setSelected}
-                onConnect={(c) => {
-                  if (!c.source || !c.target) return;
-                  setGraph((g) => ({
-                    ...g,
-                    edges: [
-                      ...g.edges,
-                      {
-                        id: crypto.randomUUID(),
-                        source: c.source,
-                        target: c.target,
-                        port: c.sourceHandle || "next",
-                      },
-                    ],
-                  }));
-                  setDirty(true);
-                }}
-                onNodesChange={(changes) => {
-                  if (readonly) return;
-                  const onlyChanges = changes.filter(
-                    (c) => c.type === "remove" || c.type === "position",
-                  );
-                  if (!onlyChanges.length) return;
-                  setGraph((g) => {
-                    const nodes = applyNodeChanges<CanvasNode>(
-                      onlyChanges,
-                      g.nodes.map((field) => ({
-                        id: field.id,
-                        type: "workflow",
-                        position: { x: field.x, y: field.y },
-                        data: { field, current: false },
-                      })),
+              <div className="workflow-editor-grid">
+                <WorkflowCanvas
+                  key={definition.id}
+                  graph={graph}
+                  selectedNodeId={selected}
+                  editable={!readonly}
+                  onSelect={setSelected}
+                  onConnect={(c) => {
+                    if (!c.source || !c.target) return;
+                    setGraph((g) => ({
+                      ...g,
+                      edges: [
+                        ...g.edges,
+                        {
+                          id: randomUuid(),
+                          source: c.source,
+                          target: c.target,
+                          port: c.sourceHandle || "next",
+                        },
+                      ],
+                    }));
+                    setDirty(true);
+                  }}
+                  onNodesChange={(changes) => {
+                    if (readonly) return;
+                    const onlyChanges = changes.filter(
+                      (c) => c.type === "remove" || c.type === "position",
                     );
-                    return {
-                      nodes: nodes.map((n) => ({
-                        ...n.data.field,
-                        x: n.position.x,
-                        y: n.position.y,
+                    if (!onlyChanges.length) return;
+                    setGraph((g) => {
+                      const nodes = applyNodeChanges<CanvasNode>(
+                        onlyChanges,
+                        g.nodes.map((field) => ({
+                          id: field.id,
+                          type: "workflow",
+                          position: { x: field.x, y: field.y },
+                          data: { field, current: false },
+                        })),
+                      );
+                      return {
+                        nodes: nodes.map((n) => ({
+                          ...n.data.field,
+                          x: n.position.x,
+                          y: n.position.y,
+                        })),
+                        edges: g.edges.filter(
+                          (e) =>
+                            nodes.some((n) => n.id === e.source) &&
+                            nodes.some((n) => n.id === e.target),
+                        ),
+                      };
+                    });
+                    setDirty(true);
+                  }}
+                  onEdgesChange={(changes) => {
+                    if (readonly) return;
+                    const relevant = changes.filter((c) => c.type === "remove");
+                    if (!relevant.length) return;
+                    setGraph((g) => ({
+                      ...g,
+                      edges: applyEdgeChanges(
+                        relevant,
+                        g.edges.map((e) => ({ ...e, sourceHandle: e.port })),
+                      ).map((e) => ({
+                        id: e.id,
+                        source: e.source,
+                        target: e.target,
+                        port: e.sourceHandle || "next",
                       })),
-                      edges: g.edges.filter(
-                        (e) =>
-                          nodes.some((n) => n.id === e.source) &&
-                          nodes.some((n) => n.id === e.target),
-                      ),
-                    };
-                  });
-                  setDirty(true);
-                }}
-                onEdgesChange={(changes) => {
-                  if (readonly) return;
-                  const relevant = changes.filter((c) => c.type === "remove");
-                  if (!relevant.length) return;
-                  setGraph((g) => ({
-                    ...g,
-                    edges: applyEdgeChanges(
-                      relevant,
-                      g.edges.map((e) => ({ ...e, sourceHandle: e.port })),
-                    ).map((e) => ({
-                      id: e.id,
-                      source: e.source,
-                      target: e.target,
-                      port: e.sourceHandle || "next",
-                    })),
-                  }));
-                  setDirty(true);
-                }}
-              />
-              {node && !readonly && (
-                <div className="workflow-properties">
-                  <h3>تنظیمات: {flowLabels[node.kind]}</h3>
-                  <Field label="عنوان گره">
-                    <input
-                      className={input}
-                      value={node.label}
-                      maxLength={150}
-                      onChange={(e) => updateNode({ label: e.target.value })}
-                    />
-                  </Field>
-                  {node.kind === "assign" && (
-                    <p>
-                      این گره از انجام‌دهنده و ناظر انتخاب‌شده هنگام ثبت وظیفه
-                      استفاده می‌کند.
-                    </p>
-                  )}
-                  {node.kind === "notify" && (
-                    <>
-                      <Field label="کانال">
-                        <select
-                          className={input}
-                          value={node.channel}
-                          onChange={(e) =>
-                            updateNode({ channel: e.target.value })
-                          }
+                    }));
+                    setDirty(true);
+                  }}
+                />
+                <aside
+                  className="workflow-inspector"
+                  aria-label="تخصیص و تنظیمات مرحله"
+                >
+                  {node ? (
+                    <div className="workflow-properties">
+                      <div className="workflow-inspector-heading">
+                        <strong>شخصی‌سازی مرحله</strong>
+                        <button
+                          type="button"
+                          className={secondary}
+                          onClick={() => setSelected("")}
+                          aria-label="بستن تنظیمات مرحله"
                         >
-                          {["درون‌برنامه‌ای", "ایمیل", "پیامک"].map((c) => (
-                            <option key={c}>{c}</option>
-                          ))}
-                        </select>
-                      </Field>
-                      <Field label="گیرنده">
-                        <select
-                          className={input}
-                          value={node.recipient}
-                          onChange={(e) =>
-                            updateNode({ recipient: e.target.value })
+                          ×
+                        </button>
+                      </div>
+                      {readonly && (
+                        <p>
+                          این نسخه منتشر شده است؛ برای ویرایش، آن را به پیش‌نویس
+                          جدید کپی کنید.
+                        </p>
+                      )}
+                      <fieldset disabled={readonly}>
+                        <h3>تنظیمات: {flowLabels[node.kind]}</h3>
+                        <Field label="عنوان گره">
+                          <input
+                            className={input}
+                            value={node.label}
+                            maxLength={150}
+                            onChange={(e) =>
+                              updateNode({ label: e.target.value })
+                            }
+                          />
+                        </Field>
+                        {node.kind === "assign" && (
+                          <p>
+                            این گره از انجام‌دهنده و ناظر انتخاب‌شده هنگام ثبت
+                            وظیفه استفاده می‌کند.
+                          </p>
+                        )}
+                        {node.kind === "notify" && (
+                          <>
+                            <Field label="کانال">
+                              <select
+                                className={input}
+                                value={node.channel}
+                                onChange={(e) =>
+                                  updateNode({ channel: e.target.value })
+                                }
+                              >
+                                {["درون‌برنامه‌ای", "ایمیل", "پیامک"].map(
+                                  (c) => (
+                                    <option key={c}>{c}</option>
+                                  ),
+                                )}
+                              </select>
+                            </Field>
+                            <Field label="گیرنده">
+                              <select
+                                className={input}
+                                value={node.recipient}
+                                onChange={(e) =>
+                                  updateNode({ recipient: e.target.value })
+                                }
+                              >
+                                <option value="assignee">انجام‌دهندگان</option>
+                                <option value="approver">ناظر</option>
+                              </select>
+                            </Field>
+                            <Field label="متن پیام؛ متغیرها: {title} و {code}">
+                              <textarea
+                                className={input}
+                                value={node.message}
+                                maxLength={1500}
+                                onChange={(e) =>
+                                  updateNode({ message: e.target.value })
+                                }
+                              />
+                            </Field>
+                          </>
+                        )}
+                        {node.kind === "delay" && (
+                          <Field label="مدت انتظار (دقیقه)">
+                            <input
+                              className={input}
+                              type="number"
+                              min={1}
+                              max={525600}
+                              value={node.minutes}
+                              onChange={(e) =>
+                                updateNode({ minutes: Number(e.target.value) })
+                              }
+                            />
+                          </Field>
+                        )}
+                        {node.kind === "condition" && (
+                          <>
+                            <Field label="فیلد شرط">
+                              <select
+                                className={input}
+                                value={node.condition}
+                                onChange={(e) =>
+                                  updateNode({ condition: e.target.value })
+                                }
+                              >
+                                <option value="priority">اولویت برابر</option>
+                                <option value="company">شرکت برابر</option>
+                                <option value="progress">
+                                  درصد پیشرفت حداقل
+                                </option>
+                              </select>
+                            </Field>
+                            <Field label="مقدار">
+                              <input
+                                className={input}
+                                value={node.value}
+                                onChange={(e) =>
+                                  updateNode({ value: e.target.value })
+                                }
+                              />
+                            </Field>
+                          </>
+                        )}
+                        <div className="workflow-stage-help">
+                          {
+                            {
+                              start: "این مرحله هنگام ثبت وظیفه اجرا می‌شود.",
+                              assign:
+                                "مسئول و ناظر از اطلاعات وظیفه انتخاب می‌شوند و دسترسی آن‌ها در سرور کنترل می‌شود.",
+                              work: "انجام‌دهنده خروجی را ثبت می‌کند تا مسیر ادامه یابد.",
+                              approval:
+                                "فقط مالک/ناظر همان تسک یا مدیر سیستم می‌تواند تأیید یا برگشت بزند.",
+                              notify:
+                                "این پیام از صف اطلاع‌رسانی و تنظیمات ماژول انتخاب‌شده ارسال می‌شود.",
+                              condition:
+                                "با نتیجه شرط، یکی از مسیرهای بله یا خیر اجرا می‌شود.",
+                              delay:
+                                "مدت انتظار ذخیره می‌شود و پس از ری‌استارت هم ادامه می‌یابد.",
+                              close:
+                                "تسک پس از تأیید ناظر و بسته بودن زیروظایف بسته می‌شود.",
+                              end: "اجرای گردش‌کار پایان می‌یابد.",
+                            }[node.kind]
                           }
-                        >
-                          <option value="assignee">انجام‌دهندگان</option>
-                          <option value="approver">ناظر</option>
-                        </select>
-                      </Field>
-                      <Field label="متن پیام؛ متغیرها: {title} و {code}">
-                        <textarea
-                          className={input}
-                          value={node.message}
-                          maxLength={1500}
-                          onChange={(e) =>
-                            updateNode({ message: e.target.value })
-                          }
-                        />
-                      </Field>
-                    </>
+                        </div>
+                        <h3>مسیرهای خروجی</h3>
+                        {ports(node.kind).map((port) => (
+                          <Field label={`مسیر ${portLabels[port]}`} key={port}>
+                            <select
+                              className={input}
+                              value={
+                                graph.edges.find(
+                                  (e) =>
+                                    e.source === node.id && e.port === port,
+                                )?.target || ""
+                              }
+                              onChange={(e) => {
+                                const target = e.target.value;
+                                setGraph((g) => ({
+                                  ...g,
+                                  edges: [
+                                    ...g.edges.filter(
+                                      (edge) =>
+                                        edge.source !== node.id ||
+                                        edge.port !== port,
+                                    ),
+                                    ...(target
+                                      ? [
+                                          {
+                                            id: randomUuid(),
+                                            source: node.id,
+                                            target,
+                                            port,
+                                          },
+                                        ]
+                                      : []),
+                                  ],
+                                }));
+                                setDirty(true);
+                              }}
+                            >
+                              <option value="">انتخاب مرحله بعد</option>
+                              {graph.nodes
+                                .filter(
+                                  (n) => n.id !== node.id && n.kind !== "start",
+                                )
+                                .map((n) => (
+                                  <option key={n.id} value={n.id}>
+                                    {n.label} · {flowLabels[n.kind]}
+                                  </option>
+                                ))}
+                            </select>
+                          </Field>
+                        ))}
+                        {!readonly && (
+                          <div className="workflow-toolbar">
+                            <button
+                              type="button"
+                              className={secondary}
+                              onClick={() => {
+                                const copy = {
+                                  ...node,
+                                  id: randomUuid(),
+                                  label: node.label + " (کپی)",
+                                  x: node.x + 240,
+                                  y: node.y + 40,
+                                };
+                                setGraph((g) => ({
+                                  ...g,
+                                  nodes: [...g.nodes, copy],
+                                }));
+                                setSelected(copy.id);
+                                setDirty(true);
+                              }}
+                            >
+                              تکثیر مرحله
+                            </button>
+                            <button
+                              type="button"
+                              className={secondary}
+                              onClick={() => {
+                                setGraph((g) => ({
+                                  nodes: g.nodes.filter(
+                                    (n) => n.id !== node.id,
+                                  ),
+                                  edges: g.edges.filter(
+                                    (e) =>
+                                      e.source !== node.id &&
+                                      e.target !== node.id,
+                                  ),
+                                }));
+                                setSelected("");
+                                setDirty(true);
+                              }}
+                            >
+                              حذف مرحله
+                            </button>
+                          </div>
+                        )}
+                      </fieldset>
+                    </div>
+                  ) : (
+                    <div className="workflow-inspector-empty">
+                      <strong>تنظیمات مرحله</strong>
+                      <p>
+                        یک نود را از نمودار انتخاب کنید یا با دکمه‌های بالا
+                        اضافه کنید تا تنظیمات آن اینجا نمایش داده شود.
+                      </p>
+                    </div>
                   )}
-                  {node.kind === "delay" && (
-                    <Field label="مدت انتظار (دقیقه)">
-                      <input
-                        className={input}
-                        type="number"
-                        min={1}
-                        max={525600}
-                        value={node.minutes}
-                        onChange={(e) =>
-                          updateNode({ minutes: Number(e.target.value) })
-                        }
-                      />
-                    </Field>
-                  )}
-                  {node.kind === "condition" && (
-                    <>
-                      <Field label="فیلد شرط">
-                        <select
-                          className={input}
-                          value={node.condition}
-                          onChange={(e) =>
-                            updateNode({ condition: e.target.value })
-                          }
-                        >
-                          <option value="priority">اولویت برابر</option>
-                          <option value="company">شرکت برابر</option>
-                          <option value="progress">درصد پیشرفت حداقل</option>
-                        </select>
-                      </Field>
-                      <Field label="مقدار">
-                        <input
-                          className={input}
-                          value={node.value}
-                          onChange={(e) =>
-                            updateNode({ value: e.target.value })
-                          }
-                        />
-                      </Field>
-                    </>
-                  )}
-                </div>
-              )}
+                </aside>
+              </div>
               <p className="text-sm">
                 اتصال‌ها را با کشیدن خروجی هر گره به ورودی گره بعد بسازید. برای
                 حذف، گره یا اتصال را انتخاب و Delete را بزنید. هر خروجی باید یک
