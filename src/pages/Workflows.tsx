@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   Workflow,
+  Trash2,
   Plus,
   Copy,
   Save,
@@ -11,6 +12,7 @@ import {
   ArrowLeft,
   ShieldCheck,
 } from "lucide-react";
+import DeleteWorkflowDialog from "../components/DeleteWorkflowDialog";
 import WorkflowStageIcon from "../components/WorkflowStageIcon";
 import "../workflow.css";
 import { randomUuid } from "../lib/uuid";
@@ -52,6 +54,7 @@ export default function Workflows() {
   const [mutate, { isLoading }] = useMutateMutation();
   const [definition, setDefinition] = useState<FlowDefinition | null>(null);
   const [graph, setGraph] = useState<FlowGraph>({ nodes: [], edges: [] });
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [selected, setSelected] = useState("");
   const [dirty, setDirty] = useState(false);
   const [message, setMessage] = useState("");
@@ -147,6 +150,19 @@ export default function Workflows() {
   }
   return (
     <div className="workflow-page" dir="rtl">
+      {deleteOpen && definition && (
+        <DeleteWorkflowDialog
+          definition={definition}
+          onClose={() => setDeleteOpen(false)}
+          onDeleted={() => {
+            setDeleteOpen(false);
+            setDefinition(null);
+            setGraph({ nodes: [], edges: [] });
+            setDirty(false);
+            setSelected("");
+          }}
+        />
+      )}
       <div className="workflow-hero">
         <div className="workflow-hero-copy">
           <span className="workflow-hero-symbol">
@@ -262,6 +278,16 @@ export default function Workflows() {
                 </div>
               </div>
               <div className="workflow-toolbar workflow-actions">
+                {catalog.definitions.some((d) => d.id === definition.id) && (
+                  <button
+                    className={`${secondary} workflow-delete-trigger`}
+                    disabled={isLoading || dirty}
+                    onClick={() => setDeleteOpen(true)}
+                  >
+                    <Trash2 size={15} />
+                    حذف گردش‌کار و زیرمجموعه‌ها
+                  </button>
+                )}
                 <button
                   className={secondary}
                   onClick={clone}

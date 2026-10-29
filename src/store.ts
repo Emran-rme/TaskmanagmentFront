@@ -81,8 +81,14 @@ export const api = createApi({
     "Workflows",
   ],
   endpoints: (b) => ({
-    workflowCatalog: b.query<FlowCatalog, void>({query:()=>"workflows",providesTags:["Workflows"]}),
-    taskFlow: b.query<TaskFlow|null,string>({query:id=>`tasks/${id}/workflow`,providesTags:["Detail"]}),
+    workflowCatalog: b.query<FlowCatalog, void>({
+      query: () => "workflows",
+      providesTags: ["Workflows"],
+    }),
+    taskFlow: b.query<TaskFlow | null, string>({
+      query: (id) => `tasks/${id}/workflow`,
+      providesTags: ["Detail"],
+    }),
     projectRoles: b.query<
       { id: string; name: string; baseRole: string }[],
       void
@@ -154,25 +160,30 @@ export const api = createApi({
     mutate: b.mutation<any, { url: string; body?: unknown; method?: string }>({
       query: ({ url, body, method = "POST" }) => ({ url, method, body }),
       invalidatesTags: (_result, _error, arg) =>
-        arg.url.startsWith("workflows") ? ["Workflows"] : arg.url === "projects" || /^projects\/[^/]+$/.test(arg.url)
-          ? [
-              "Workspace",
-              { type: "ProjectCover", id: arg.url.split("/")[1] || "LIST" },
-            ]
-          : arg.url.startsWith("settings/modules")
-            ? ["Modules", "Workspace", "Integrations", "Notices"]
-            : arg.url === "settings"
-              ? ["Workspace", "Modules"]
-              : arg.url === "settings/integrations"
-                ? ["Integrations"]
-                : [
-                    "Workspace",
-                    "Detail",
-                    "Notices",
-                    "Users",
-                    "Trash",
-                    "Master",
-                  ],
+        arg.url.endsWith("/deletion-preview")
+          ? []
+          : arg.url.startsWith("workflows") ||
+              arg.url.startsWith("trash/workflows/")
+            ? ["Workflows", "Workspace", "Detail", "Trash", "Notices"]
+            : arg.url === "projects" || /^projects\/[^/]+$/.test(arg.url)
+              ? [
+                  "Workspace",
+                  { type: "ProjectCover", id: arg.url.split("/")[1] || "LIST" },
+                ]
+              : arg.url.startsWith("settings/modules")
+                ? ["Modules", "Workspace", "Integrations", "Notices"]
+                : arg.url === "settings"
+                  ? ["Workspace", "Modules"]
+                  : arg.url === "settings/integrations"
+                    ? ["Integrations"]
+                    : [
+                        "Workspace",
+                        "Detail",
+                        "Notices",
+                        "Users",
+                        "Trash",
+                        "Master",
+                      ],
     }),
   }),
 });
@@ -205,9 +216,22 @@ export const errorText = (e: any) =>
   e?.data?.message ||
   e?.data?.detail ||
   e?.data?.title ||
-  (e?.status === 401 ? "احراز هویت ناموفق است؛ اطلاعات ورود یا اعتبار نشست را بررسی کنید." :
-   e?.status === 403 ? "اجازه انجام این عملیات را ندارید." :
-   e?.status === "FETCH_ERROR" ? "اتصال به سرور برقرار نشد؛ اتصال شبکه را بررسی کنید." :
-   e?.status === "TIMEOUT_ERROR" ? "مهلت پاسخ سرور تمام شد؛ دوباره تلاش کنید." : "") ||
+  (e?.status === 401
+    ? "احراز هویت ناموفق است؛ اطلاعات ورود یا اعتبار نشست را بررسی کنید."
+    : e?.status === 403
+      ? "اجازه انجام این عملیات را ندارید."
+      : e?.status === "FETCH_ERROR"
+        ? "اتصال به سرور برقرار نشد؛ اتصال شبکه را بررسی کنید."
+        : e?.status === "TIMEOUT_ERROR"
+          ? "مهلت پاسخ سرور تمام شد؛ دوباره تلاش کنید."
+          : "") ||
   "عملیات ناموفق بود. اتصال و دسترسی را بررسی کنید.";
-export { can, manages, canProject, canEditTask, canCloseTask, canReassignTask, canManageProject } from "./lib/access";
+export {
+  can,
+  manages,
+  canProject,
+  canEditTask,
+  canCloseTask,
+  canReassignTask,
+  canManageProject,
+} from "./lib/access";
