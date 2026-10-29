@@ -5,6 +5,7 @@ import type { User, Workspace, DashboardData } from "./lib/types";
 import type { IntegrationResponse } from "./lib/integrations";
 import type { ModulesResponse } from "./lib/modules";
 import { notifyError } from "./lib/toasts";
+import type { FlowCatalog, TaskFlow } from "./lib/workflows";
 export interface DeletedRecord {
   entity: string;
   id: string;
@@ -77,8 +78,11 @@ export const api = createApi({
     "Modules",
     "Trash",
     "Master",
+    "Workflows",
   ],
   endpoints: (b) => ({
+    workflowCatalog: b.query<FlowCatalog, void>({query:()=>"workflows",providesTags:["Workflows"]}),
+    taskFlow: b.query<TaskFlow|null,string>({query:id=>`tasks/${id}/workflow`,providesTags:["Detail"]}),
     projectRoles: b.query<
       { id: string; name: string; baseRole: string }[],
       void
@@ -150,7 +154,7 @@ export const api = createApi({
     mutate: b.mutation<any, { url: string; body?: unknown; method?: string }>({
       query: ({ url, body, method = "POST" }) => ({ url, method, body }),
       invalidatesTags: (_result, _error, arg) =>
-        arg.url === "projects" || /^projects\/[^/]+$/.test(arg.url)
+        arg.url.startsWith("workflows") ? ["Workflows"] : arg.url === "projects" || /^projects\/[^/]+$/.test(arg.url)
           ? [
               "Workspace",
               { type: "ProjectCover", id: arg.url.split("/")[1] || "LIST" },
@@ -179,6 +183,8 @@ export const store = configureStore({
 setupListeners(store.dispatch);
 export type RootState = ReturnType<typeof store.getState>;
 export const {
+  useWorkflowCatalogQuery,
+  useTaskFlowQuery,
   useDashboardQuery,
   useProjectCoverQuery,
   useProjectRolesQuery,

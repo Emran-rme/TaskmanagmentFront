@@ -18,6 +18,7 @@ import "react-toastify/dist/ReactToastify.css";
 if ("serviceWorker" in navigator)
   navigator.serviceWorker.register("/sw.js").catch(console.error);
 const ContextSelect = lazy(() => import("./pages/ContextSelect"));
+const Workflows = lazy(() => import("./pages/Workflows"));
 const Organization = lazy(() => import("./pages/Organization"));
 const PersonalTodos = lazy(() => import("./pages/PersonalTodos"));
 const Master = lazy(() => import("./pages/Master"));
@@ -65,6 +66,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="select-context" element={<ContextRoute />} />
         <Route element={<Protected />}>
+          <Route path="workflows" element={<Workflows />} />
           <Route path="organization" element={<Organization />} />
           <Route path="master" element={<Master />} />
           <Route path="projects/:projectId/*" element={<ProjectWorkspace />} />

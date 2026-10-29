@@ -28,6 +28,7 @@ import {
   canViewWorkspace,
 } from "../lib/navigationAccess";
 const nav = [
+  ["/workflows", "گردش‌کارها", Grid2X2],
   ["/todos", "کارهای شخصی", ListTodo],
   ["/master", "اطلاعات پایه", Grid2X2],
   ["/", "میز کار", LayoutDashboard],

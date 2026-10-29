@@ -1,4 +1,5 @@
 import TaskTree from "../components/TaskTree";
+import TaskWorkflowPanel from "../components/TaskWorkflowPanel";
 import PersonPicker from "../components/PersonPicker";
 import TaskActivity, { activityDate } from "../components/TaskActivity";
 import DeleteButton from "../components/DeleteButton";
@@ -22,6 +23,7 @@ import {
 import {
   RootState,
   useDetailQuery,
+  useTaskFlowQuery,
   useWorkspaceQuery,
   useMutateMutation,
   errorText,
@@ -44,6 +46,7 @@ import { Task, assignedIds, statuses } from "../lib/types";
 export default function TaskDetail() {
   const { id = "" } = useParams();
   const { data: d, error: detailError } = useDetailQuery(id);
+  const { data: taskFlow } = useTaskFlowQuery(id);
   const { data: w } = useWorkspaceQuery();
   const [mutate, { isLoading }] = useMutateMutation();
   const [tab, T] = useState("progress");
@@ -61,6 +64,10 @@ export default function TaskDetail() {
   const canParticipate = canEditTask(user, task, w);
   const editable = canParticipate && task.status !== "بسته شده";
   const reviewer = canCloseTask(user, task, w);
+  const managed = taskFlow?.enabled && taskFlow.status === "Waiting";
+  const workStage = !managed || taskFlow.stage === "work";
+  const reviewStage = managed && taskFlow.stage === "approval";
+  const operationAllowed = tab === "progress" ? workStage : tab === "delivery" ? workStage || reviewStage && reviewer : true;
   async function send(url: string, body: unknown, method = "POST") {
     E("");
     S("");
@@ -89,6 +96,7 @@ export default function TaskDetail() {
       >
         <div className="task-detail-columns">
           <section className="task-detail-main" aria-label="جزئیات وظیفه">
+            <TaskWorkflowPanel task={task} reviewer={reviewer}/>
             <div className="task-title-row">
               <h1>{task.title}</h1>
               <div className="flex">
@@ -130,11 +138,12 @@ export default function TaskDetail() {
                     disabled={
                       !editable ||
                       isLoading ||
+                      (managed && (status === "بسته شده" ? !reviewStage : !workStage)) ||
                       (status === "بسته شده" && !reviewer)
                     }
                     onClick={() => {
                       if (status === task.status) return;
-                      if (status === "بسته شده") {
+                      if (status === "بسته شده" || managed && status === "حل شده") {
                         T("delivery");
                         setOperationsOpen(true);
                         E(
@@ -322,7 +331,7 @@ export default function TaskDetail() {
                         await send("tasks/" + id + "/deliver", {
                           output: v.output,
                           quality: +String(v.quality),
-                          accept: v.accept === "on",
+                          accept: reviewStage || v.accept === "on",
                           version: task.version,
                         });
                     }}
@@ -433,9 +442,9 @@ export default function TaskDetail() {
                             ))}
                           </select>
                         </Field>
-                        {reviewer && (
+                        {reviewer && (!managed || reviewStage) && (
                           <label className="flex items-center gap-2 text-sm">
-                            <input type="checkbox" name="accept" />
+                            <input type="checkbox" name="accept" defaultChecked={!!reviewStage} disabled={!!reviewStage}/>
                             تأیید تحویل و تکمیل وظیفه
                           </label>
                         )}
@@ -456,7 +465,8 @@ export default function TaskDetail() {
                       </Field>
                     )}
                     <div className="md:col-span-2">
-                      <button disabled={isLoading} className={button}>
+                      {!operationAllowed && <p role="status">این عملیات در مرحله فعلی گردش‌کار مجاز نیست.</p>}
+                      <button disabled={isLoading || !operationAllowed} className={button}>
                         ثبت اطلاعات
                       </button>
                     </div>
