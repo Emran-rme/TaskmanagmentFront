@@ -14,6 +14,9 @@ import {
   type ReactFlowInstance,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import "../workflow.css";
+import WorkflowStageIcon from "./WorkflowStageIcon";
+import { Settings2 } from "lucide-react";
 import {
   flowLabels,
   ports,
@@ -32,18 +35,23 @@ const WorkflowNode = memo(function WorkflowNode({
 }: NodeProps<CanvasNode>) {
   return (
     <div
-      className={`workflow-node ${data.current ? "workflow-current" : ""} ${selected ? "workflow-selected" : ""}`}
+      className={`workflow-node workflow-kind-${data.field.kind} ${data.current ? "workflow-current" : ""} ${selected ? "workflow-selected" : ""}`}
     >
       {data.field.kind !== "start" && (
         <Handle type="target" position={Position.Top} />
       )}
-      <small>{flowLabels[data.field.kind]}</small>
+      <div className="workflow-node-heading">
+        <span className="workflow-stage-icon">
+          <WorkflowStageIcon kind={data.field.kind} />
+        </span>
+        <small>{flowLabels[data.field.kind]}</small>
+      </div>
       <button
         type="button"
         className="workflow-node-settings nodrag"
         aria-label={`تنظیمات ${data.field.label}`}
       >
-        ⚙
+        <Settings2 size={15} aria-hidden="true" />
       </button>
       <strong>{data.field.label}</strong>
       <div className="workflow-ports">
@@ -86,7 +94,7 @@ export default function WorkflowCanvas({
   const [instance, setInstance] =
     useState<ReactFlowInstance<CanvasNode> | null>(null);
   useEffect(() => {
-    void instance?.fitView({ padding: 0.22, duration: 200 });
+    void instance?.fitView({ padding: 0.12, duration: 200 });
   }, [instance, graph.nodes.length]);
   const nodes = useMemo<CanvasNode[]>(
     () =>
@@ -105,6 +113,24 @@ export default function WorkflowCanvas({
         ...e,
         selected: selectedEdge === e.id,
         sourceHandle: e.port,
+        type: "smoothstep",
+        style: {
+          stroke:
+            e.port === "reject"
+              ? "#d28b99"
+              : e.port === "approve"
+                ? "#65a79d"
+                : "#8c91b1",
+          strokeWidth: 1.6,
+        },
+        labelStyle: {
+          fontSize: 10,
+          fontFamily: "IRANSans",
+          fill: "var(--wf-node-muted)",
+        },
+        labelBgStyle: { fill: "var(--wf-canvas)", fillOpacity: 0.95 },
+        labelBgPadding: [7, 4] as [number, number],
+        labelBgBorderRadius: 5,
         label: portLabels[e.port],
         animated: e.source === current,
       })),
@@ -146,7 +172,7 @@ export default function WorkflowCanvas({
         maxZoom={1.5}
         aria-label="نمودار گردش‌کار"
       >
-        <Background />
+        <Background gap={22} size={1} color="var(--wf-dot)" />
         <Controls showInteractive={false} />
       </ReactFlow>
     </div>

@@ -1,4 +1,5 @@
 import { useState, lazy, Suspense } from "react";
+import "../workflow.css";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import {

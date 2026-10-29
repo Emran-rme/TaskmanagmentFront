@@ -1,4 +1,18 @@
 import { useState } from "react";
+import {
+  Workflow,
+  Plus,
+  Copy,
+  Save,
+  Rocket,
+  Layers3,
+  MousePointer2,
+  X,
+  ArrowLeft,
+  ShieldCheck,
+} from "lucide-react";
+import WorkflowStageIcon from "../components/WorkflowStageIcon";
+import "../workflow.css";
 import { randomUuid } from "../lib/uuid";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
@@ -133,42 +147,76 @@ export default function Workflows() {
   }
   return (
     <div className="workflow-page" dir="rtl">
-      <div className="flex justify-between items-center">
-        <h1>طراح گردش‌کار</h1>
+      <div className="workflow-hero">
+        <div className="workflow-hero-copy">
+          <span className="workflow-hero-symbol">
+            <Workflow size={28} strokeWidth={1.6} />
+          </span>
+          <div>
+            <span className="workflow-eyebrow">فرایندهای تیم شما</span>
+            <h1>طراح گردش‌کار</h1>
+            <p>از ثبت وظیفه تا تأیید نهایی؛ مسیر همکاری تیم را طراحی کنید.</p>
+          </div>
+        </div>
         <button
           className={button}
           onClick={create}
           disabled={isLoading || dirty}
         >
-          الگوی جدید
+          <Plus size={17} /> الگوی جدید
         </button>
       </div>
       {!catalog.enabled && (
         <ErrorBox message="موتور گردش‌کار در تنظیمات سرور غیرفعال است؛ الگوها اجرا نمی‌شوند." />
       )}
-      <p className="text-sm leading-7">
-        نسخه فعال به تسک‌های جدید تخصیص می‌یابد. تسک‌های قبلی با نسخه خود ادامه
-        می‌دهند. برای بازگشت، نسخه منتشرشده قبلی را فعال کنید یا الگو را غیرفعال
-        کنید.
-      </p>
+      <div className="workflow-version-note">
+        <ShieldCheck size={17} />
+        <p>
+          هر تسک با نسخه خودش ادامه می‌یابد. تغییر نسخه فعال فقط روی تسک‌های
+          جدید اثر دارد.
+        </p>
+        <span>
+          {catalog.definitions
+            .filter((d) => d.active)
+            .length.toLocaleString("fa-IR")}{" "}
+          الگوی فعال
+        </span>
+      </div>
       {dirty && (
-        <p role="status">
+        <p role="status" className="workflow-unsaved">
           تغییرات ذخیره‌نشده دارید؛ قبل از تعویض الگو آن‌ها را ذخیره کنید.
         </p>
       )}
       {message && <ErrorBox message={message} />}
       <div className="workflow-layout">
-        <Card>
-          <h2>الگوها و نسخه‌ها</h2>
+        <Card className="workflow-library">
+          <div className="workflow-panel-title">
+            <Layers3 size={18} />
+            <h2>الگوها و نسخه‌ها</h2>
+            <span>{catalog.definitions.length.toLocaleString("fa-IR")}</span>
+          </div>
+          {!catalog.definitions.length && (
+            <div className="workflow-library-empty">
+              <Layers3 size={30} />
+              <p>هنوز الگویی نساخته‌اید</p>
+              <small>اولین مسیر تیم را طراحی کنید.</small>
+            </div>
+          )}
           <div className="workflow-version-list">
             {catalog.definitions.map((d) => (
               <button
                 disabled={dirty || isLoading}
-                className={`${secondary} ${definition?.id === d.id ? "workflow-active-version" : ""}`}
+                className={`workflow-version-card ${definition?.id === d.id ? "workflow-active-version" : ""}`}
+                aria-pressed={definition?.id === d.id}
                 key={d.id}
                 onClick={() => open(d)}
               >
-                <strong>{d.name}</strong>
+                <div className="workflow-version-heading">
+                  <span className="workflow-library-icon">
+                    <Workflow size={17} />
+                  </span>
+                  <strong>{d.name}</strong>
+                </div>
                 <span>
                   {d.company} ·{" "}
                   {d.projectId
@@ -176,24 +224,50 @@ export default function Workflows() {
                         ?.name || "پروژه"
                     : "پیش‌فرض شرکت"}
                 </span>
-                <span>
-                  {d.published ? `نسخه ${d.version}` : "پیش‌نویس"}{" "}
-                  {d.active ? " · فعال" : ""}
-                </span>
+                <div className="workflow-version-meta">
+                  <span>
+                    {d.published
+                      ? `نسخه ${d.version.toLocaleString("fa-IR")}`
+                      : "پیش‌نویس"}
+                  </span>
+                  <span
+                    className={`workflow-badge ${d.active ? "is-live" : d.published ? "is-published" : "is-draft"}`}
+                  >
+                    {d.active
+                      ? "فعال"
+                      : d.published
+                        ? "منتشرشده"
+                        : "در حال طراحی"}
+                  </span>
+                </div>
               </button>
             ))}
           </div>
         </Card>
-        <Card>
+        <Card className="workflow-editor-card">
           {definition ? (
             <>
-              <div className="workflow-toolbar">
+              <div className="workflow-editor-heading">
+                <div>
+                  <span className="workflow-eyebrow">فضای طراحی</span>
+                  <h2>{definition.name}</h2>
+                </div>
+                <div className="workflow-editor-counts">
+                  <span>
+                    {graph.nodes.length.toLocaleString("fa-IR")} مرحله
+                  </span>
+                  <span>
+                    {graph.edges.length.toLocaleString("fa-IR")} اتصال
+                  </span>
+                </div>
+              </div>
+              <div className="workflow-toolbar workflow-actions">
                 <button
                   className={secondary}
                   onClick={clone}
                   disabled={isLoading}
                 >
-                  کپی به پیش‌نویس جدید
+                  <Copy size={15} /> کپی به پیش‌نویس جدید
                 </button>
                 {!readonly && (
                   <button
@@ -201,7 +275,7 @@ export default function Workflows() {
                     disabled={isLoading || !dirty}
                     onClick={save}
                   >
-                    ذخیره پیش‌نویس
+                    <Save size={15} /> ذخیره پیش‌نویس
                   </button>
                 )}
                 <button
@@ -209,6 +283,7 @@ export default function Workflows() {
                   disabled={isLoading || dirty}
                   onClick={() => setPending(definition)}
                 >
+                  <Rocket size={15} />
                   {readonly ? "فعال‌سازی این نسخه" : "اعتبارسنجی و انتشار"}
                 </button>
                 {definition.active && (
@@ -253,7 +328,7 @@ export default function Workflows() {
                   </button>
                 </div>
               )}
-              <div className="grid gap-3 md:grid-cols-3">
+              <div className="workflow-scope-fields">
                 <Field label="نام الگو">
                   <input
                     className={input}
@@ -316,34 +391,47 @@ export default function Workflows() {
                 </Field>
               </div>
               {!readonly && (
-                <div className="workflow-toolbar">
-                  {(Object.keys(flowLabels) as FlowKind[]).map((kind) => (
-                    <button
-                      className={secondary}
-                      key={kind}
-                      onClick={() => {
-                        const n = {
-                          id: randomUuid(),
-                          kind,
-                          label: flowLabels[kind],
-                          x: 250,
-                          y: graph.nodes.length * 100,
-                          channel: "درون‌برنامه‌ای",
-                          recipient: "assignee",
-                          message: "وظیفه {code}: {title}",
-                          minutes: 60,
-                          condition: "priority",
-                          value: "بالا",
-                        };
-                        setGraph({ ...graph, nodes: [...graph.nodes, n] });
-                        setSelected(n.id);
-                        setDirty(true);
-                      }}
-                    >
-                      + {flowLabels[kind]}
-                    </button>
-                  ))}
-                </div>
+                <section className="workflow-palette">
+                  <div className="workflow-palette-heading">
+                    <span>
+                      <Plus size={15} />
+                      افزودن مرحله
+                    </span>
+                    <small>یک مرحله را انتخاب کنید و مسیر را بسازید</small>
+                  </div>
+                  <div className="workflow-palette-items">
+                    {(Object.keys(flowLabels) as FlowKind[]).map((kind) => (
+                      <button
+                        className={`workflow-palette-item workflow-kind-${kind}`}
+                        key={kind}
+                        onClick={() => {
+                          const n = {
+                            id: randomUuid(),
+                            kind,
+                            label: flowLabels[kind],
+                            x: 250,
+                            y: graph.nodes.length * 100,
+                            channel: "درون‌برنامه‌ای",
+                            recipient: "assignee",
+                            message: "وظیفه {code}: {title}",
+                            minutes: 60,
+                            condition: "priority",
+                            value: "بالا",
+                          };
+                          setGraph({ ...graph, nodes: [...graph.nodes, n] });
+                          setSelected(n.id);
+                          setDirty(true);
+                        }}
+                      >
+                        <span className="workflow-stage-icon">
+                          <WorkflowStageIcon kind={kind} size={17} />
+                        </span>
+                        <span>{flowLabels[kind]}</span>
+                        <Plus size={12} className="workflow-palette-plus" />
+                      </button>
+                    ))}
+                  </div>
+                </section>
               )}
               <div className="workflow-editor-grid">
                 <WorkflowCanvas
@@ -424,15 +512,23 @@ export default function Workflows() {
                 >
                   {node ? (
                     <div className="workflow-properties">
-                      <div className="workflow-inspector-heading">
-                        <strong>شخصی‌سازی مرحله</strong>
+                      <div
+                        className={`workflow-inspector-heading workflow-kind-${node.kind}`}
+                      >
+                        <span className="workflow-stage-icon">
+                          <WorkflowStageIcon kind={node.kind} />
+                        </span>
+                        <div>
+                          <small>شخصی‌سازی مرحله</small>
+                          <strong>{flowLabels[node.kind]}</strong>
+                        </div>
                         <button
                           type="button"
                           className={secondary}
                           onClick={() => setSelected("")}
                           aria-label="بستن تنظیمات مرحله"
                         >
-                          ×
+                          <X size={16} />
                         </button>
                       </div>
                       {readonly && (
@@ -442,7 +538,9 @@ export default function Workflows() {
                         </p>
                       )}
                       <fieldset disabled={readonly}>
-                        <h3>تنظیمات: {flowLabels[node.kind]}</h3>
+                        <h3 className="workflow-inspector-section-title">
+                          اطلاعات مرحله
+                        </h3>
                         <Field label="عنوان گره">
                           <input
                             className={input}
@@ -661,7 +759,10 @@ export default function Workflows() {
                     </div>
                   ) : (
                     <div className="workflow-inspector-empty">
-                      <strong>تنظیمات مرحله</strong>
+                      <span className="workflow-empty-pointer">
+                        <MousePointer2 size={26} />
+                      </span>
+                      <strong>هر مرحله، تنظیمات خودش را دارد</strong>
                       <p>
                         یک نود را از نمودار انتخاب کنید یا با دکمه‌های بالا
                         اضافه کنید تا تنظیمات آن اینجا نمایش داده شود.
@@ -670,14 +771,52 @@ export default function Workflows() {
                   )}
                 </aside>
               </div>
-              <p className="text-sm">
-                اتصال‌ها را با کشیدن خروجی هر گره به ورودی گره بعد بسازید. برای
-                حذف، گره یا اتصال را انتخاب و Delete را بزنید. هر خروجی باید یک
-                اتصال داشته باشد. مسیر بستن باید از تأیید ناظر عبور کند.
+              <p className="workflow-canvas-help">
+                <MousePointer2 size={15} />
+                <span>
+                  اتصال‌ها را با کشیدن خروجی هر گره به ورودی گره بعد بسازید.
+                  برای حذف، گره یا اتصال را انتخاب و Delete را بزنید. هر خروجی
+                  باید یک اتصال داشته باشد. مسیر بستن باید از تأیید ناظر عبور
+                  کند.
+                </span>
               </p>
             </>
           ) : (
-            <p>یک الگو انتخاب کنید یا الگوی جدید بسازید.</p>
+            <div className="workflow-welcome">
+              <span className="workflow-welcome-icon">
+                <Workflow size={42} strokeWidth={1.4} />
+              </span>
+              <span className="workflow-eyebrow">
+                یک مسیر روشن برای هر وظیفه
+              </span>
+              <h2>اینجا، همکاری تیم شکل می‌گیرد</h2>
+              <p>
+                مراحل انجام، بررسی و اطلاع‌رسانی را کنار هم بچینید.
+                <br />
+                از یک الگوی آماده شروع کنید و آن را برای تیم خود تغییر دهید.
+              </p>
+              <div className="workflow-welcome-stages">
+                {(["start", "work", "approval", "end"] as FlowKind[]).map(
+                  (kind, i) => (
+                    <div key={kind} className={`workflow-kind-${kind}`}>
+                      <span className="workflow-stage-icon">
+                        <WorkflowStageIcon kind={kind} size={20} />
+                      </span>
+                      <span>{flowLabels[kind]}</span>
+                      {i < 3 && <ArrowLeft size={15} />}
+                    </div>
+                  ),
+                )}
+              </div>
+              <button className={button} onClick={create} disabled={isLoading}>
+                <Plus size={17} />
+                ساخت اولین الگو
+              </button>
+              <small>
+                <ShieldCheck size={13} /> الگوها تا زمان انتشار روی وظایف شما
+                اثر ندارند.
+              </small>
+            </div>
           )}
         </Card>
       </div>
