@@ -28,12 +28,13 @@ import {
   canViewWorkspace,
 } from "../lib/navigationAccess";
 const nav = [
-  ["/workflows", "گردش‌کارها", Grid2X2],
-  ["/todos", "کارهای شخصی", ListTodo],
-  ["/master", "اطلاعات پایه", Grid2X2],
-  ["/", "میز کار", LayoutDashboard],
-  ["/tasks", "وظایف", ListTodo],
+  ["/", "کارهای من", ListTodo],
+  ["/dashboard", "داشبورد", LayoutDashboard],
+  ["/tasks", "وظایف تیم", ListTodo],
   ["/projects", "پروژه‌ها", FolderKanban],
+  ["/todos", "کارهای روزانه", ListTodo],
+  ["/workflows", "گردش‌کارها", Grid2X2],
+  ["/master", "اطلاعات پایه", Grid2X2],
   ["/notifications", "اعلان‌ها", Bell],
 ] as const;
 export default function Layout() {
@@ -51,7 +52,7 @@ export default function Layout() {
   }, [location.pathname, location.search]);
   const title =
     location.pathname === "/"
-      ? "میز کار"
+      ? "کارهای من"
       : nav.find(
           ([path]) => path !== "/" && location.pathname.startsWith(path),
         )?.[1] || (location.pathname === "/settings" ? "تنظیمات" : "فضای کار");

@@ -106,6 +106,10 @@ export interface Project {
   status: string;
 }
 export interface Settings {
+  weeklyReportEnabled?: boolean;
+  weeklyReportSms?: boolean;
+  weeklyReportDay?: number;
+  weeklyReportMinute?: number;
   email: boolean;
   sms: boolean;
   inApp: boolean;
@@ -132,6 +136,25 @@ export interface Workspace {
   priorities: string[];
 }
 export const statuses = ["جدید", "در حال انجام", "حل شده", "بسته شده"];
+
+export interface MyWorkPage {
+  today: string;
+  total: number;
+  overdue: number;
+  items: {
+    key: string;
+    kind: string;
+    title: string;
+    code: string;
+    projectName: string;
+    company: string;
+    status: string;
+    priority: string;
+    due: string | null;
+    href: string;
+    actionable: boolean;
+  }[];
+}
 
 export interface DashboardData {
   tasks: Pick<

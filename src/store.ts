@@ -1,7 +1,7 @@
 import { configureStore, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { setupListeners } from "@reduxjs/toolkit/query";
-import type { User, Workspace, DashboardData } from "./lib/types";
+import type { User, Workspace, DashboardData, MyWorkPage } from "./lib/types";
 import type { IntegrationResponse } from "./lib/integrations";
 import type { ModulesResponse } from "./lib/modules";
 import { notifyError } from "./lib/toasts";
@@ -130,6 +130,10 @@ export const api = createApi({
       query: () => "settings/integrations",
       providesTags: ["Integrations"],
     }),
+    myWork: b.query<MyWorkPage, void>({
+      query: () => "my-work",
+      providesTags: ["Workspace", "Detail"],
+    }),
     dashboard: b.query<DashboardData, void>({
       query: () => "dashboard",
       providesTags: ["Workspace"],
@@ -196,6 +200,7 @@ export type RootState = ReturnType<typeof store.getState>;
 export const {
   useWorkflowCatalogQuery,
   useTaskFlowQuery,
+  useMyWorkQuery,
   useDashboardQuery,
   useProjectCoverQuery,
   useProjectRolesQuery,

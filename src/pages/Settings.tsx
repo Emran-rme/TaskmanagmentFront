@@ -92,9 +92,9 @@ export default function Settings() {
       ) : tab === "sms" ? (
         <Card title="ماژول‌های پیامک">
           <p className="mb-4 text-sm leading-8 text-slate-500 dark:text-slate-400">
-            نواوران موج، کاوه‌نگار و درگاه عمومی از بخش مدیریت ماژول‌ها اضافه و تنظیم
-            می‌شوند. ماژول فعال، پیامک‌های وظایف و یادآوری را از صف ارسال دریافت
-            می‌کند.
+            نواوران موج، کاوه‌نگار و درگاه عمومی از بخش مدیریت ماژول‌ها اضافه و
+            تنظیم می‌شوند. ماژول فعال، پیامک‌های وظایف و یادآوری را از صف ارسال
+            دریافت می‌کند.
           </p>
           <p className="mb-5 text-sm text-navy dark:text-sky-50">
             ماژول فعال:{" "}
@@ -123,17 +123,7 @@ export default function Settings() {
   );
 }
 
-function Workflow({
-  settings,
-}: {
-  settings: {
-    email: boolean;
-    sms: boolean;
-    inApp: boolean;
-    approval: boolean;
-    reminder: number;
-  };
-}) {
+function Workflow({ settings }: { settings: import("../lib/types").Settings }) {
   const admin = useSelector((s: RootState) => s.auth.user?.role === "Admin");
   const [mutate, { isLoading }] = useMutateMutation();
   const [feedback, setFeedback] = useState({ error: "", message: "" });
@@ -154,6 +144,16 @@ function Workflow({
               inApp: f.has("inApp"),
               approval: f.has("approval"),
               reminder: Number(f.get("reminder")),
+              ...(admin
+                ? {
+                    weeklyReportEnabled: f.has("weeklyReportEnabled"),
+                    weeklyReportSms: f.has("weeklyReportSms"),
+                    weeklyReportDay: Number(f.get("weeklyReportDay")),
+                    weeklyReportMinute: String(f.get("weeklyReportTime"))
+                      .split(":")
+                      .reduce((h, n) => h * 60 + Number(n), 0),
+                  }
+                : {}),
             },
           }).unwrap();
           setFeedback({ error: "", message: "تنظیمات گردش کار ذخیره شد." });
@@ -186,6 +186,61 @@ function Workflow({
             ))}
         </div>
       </Card>
+      {admin && (
+        <Card title="گزارش هفتگی مدیران" className="xl:col-span-2">
+          <div className="space-y-4">
+            <SettingsToggle
+              name="weeklyReportEnabled"
+              label="ارسال گزارش هفتگی"
+              description="گزارش پیشرفت هر پروژه فعال برای مدیر همان پروژه ارسال می‌شود."
+              defaultChecked={settings.weeklyReportEnabled ?? true}
+            />
+            <SettingsToggle
+              name="weeklyReportSms"
+              label="پیامک گزارش هفتگی"
+              description="ارسال پیامکی گزارش علاوه بر فعال‌بودن این گزینه به فعال‌بودن کانال پیامک نیاز دارد."
+              defaultChecked={settings.weeklyReportSms ?? true}
+            />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="روز ارسال">
+                <select
+                  className={input}
+                  name="weeklyReportDay"
+                  defaultValue={settings.weeklyReportDay ?? 6}
+                >
+                  {[
+                    [6, "شنبه"],
+                    [0, "یکشنبه"],
+                    [1, "دوشنبه"],
+                    [2, "سه‌شنبه"],
+                    [3, "چهارشنبه"],
+                    [4, "پنجشنبه"],
+                    [5, "جمعه"],
+                  ].map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="ساعت ارسال (به وقت تهران)">
+                <input
+                  className={input}
+                  type="time"
+                  name="weeklyReportTime"
+                  required
+                  defaultValue={`${String(Math.floor((settings.weeklyReportMinute ?? 480) / 60)).padStart(2, "0")}:${String((settings.weeklyReportMinute ?? 480) % 60).padStart(2, "0")}`}
+                />
+              </Field>
+            </div>
+            <p className="text-xs leading-7 text-slate-500">
+              هر گزارش برای هر پروژه و کانال، در روز انتخاب‌شده یک بار ارسال
+              می‌شود. ایمیل و اعلان درون‌برنامه‌ای از تنظیمات کانال‌ها پیروی
+              می‌کنند. پس از تغییر گزینه‌ها، «ذخیره تنظیمات» را بزنید.
+            </p>
+          </div>
+        </Card>
+      )}
       <Card title="قواعد ارزیابی و یادآوری">
         <div className="space-y-5">
           <SettingsToggle
@@ -206,7 +261,7 @@ function Workflow({
             />
           </Field>
           <p className="text-xs leading-7 text-slate-500 dark:text-slate-400">
-            بین صفر تا ۳۰ روز؛ یادآوری‌ها هر پنج دقیقه بررسی می‌شوند.
+            بین صفر تا ۳۰ روز؛ یادآوری‌ها هر ۳۰ ثانیه بررسی می‌شوند.
           </p>
           <Feedback {...feedback} />
           <button disabled={isLoading} className={button}>

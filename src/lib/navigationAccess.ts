@@ -11,9 +11,12 @@ export const canViewWorkspace = (user: User | null) =>
 
 export function canVisit(user: User | null, path: string): boolean {
   if (!user || user.enabled === false) return false;
-  if (path === "/" || path === "/select-context") return canViewWorkspace(user);
+  if (path === "/") return true;
+  if (path === "/dashboard" || path === "/select-context")
+    return canViewWorkspace(user);
   if (path === "/master") return user.role === "Admin" && user.company === "*";
-  if (path === "/modules" || path === "/workflows") return user.role === "Admin";
+  if (path === "/modules" || path === "/workflows")
+    return user.role === "Admin";
   if (path === "/settings")
     return can(user, "settings.read") && canViewWorkspace(user);
   if (path === "/notifications") return can(user, "notifications.read");
@@ -37,7 +40,8 @@ export function canVisit(user: User | null, path: string): boolean {
       (module) =>
         can(user, module + ".delete") || can(user, module + ".restore"),
     );
-  if (path === "/organization") return can(user,"organization.read") || can(user,"organization.write");
+  if (path === "/organization")
+    return can(user, "organization.read") || can(user, "organization.write");
   if (["/calendar", "/gantt", "/kanban"].includes(path))
     return can(user, "tasks.read");
   if (path.startsWith("/tasks"))

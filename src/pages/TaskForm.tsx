@@ -92,9 +92,8 @@ export default function TaskForm() {
   const mayReassign = editing
     ? canReassignTask(user, editing, w)
     : user?.role === "Admin" ||
-      (project.id
-        ? project.managerId === user?.id
-        : manages(user, project.company));
+      manages(user, project.company) ||
+      project.managerId === user?.id;
   const organization = w.organization?.length
     ? w.organization
     : w.companies.map((name) => ({
@@ -114,7 +113,8 @@ export default function TaskForm() {
   const assignees = w.users.filter(
     (person) =>
       person.enabled !== false &&
-      person.assignable !== false &&
+      (person.assignable !== false ||
+        (!!editing && assignedIds(editing).includes(person.id))) &&
       (!project.id ||
         w.projectMembers?.some(
           (m) => m.projectId === project.id && m.userId === person.id,
@@ -364,6 +364,12 @@ export default function TaskForm() {
             </fieldset>
             <fieldset disabled={isLoading} className="form-section">
               <legend>انجام‌دهنده و تأییدکننده</legend>
+              {mayReassign && user?.role !== "Admin" && (
+                <p className="mb-4 text-xs leading-7 text-slate-500 dark:text-slate-400">
+                  گیرندگان از پرسنل فعال واحد شما و زیرواحدهای آن انتخاب
+                  می‌شوند. برای وظیفه پروژه‌ای، فرد باید عضو همان پروژه هم باشد.
+                </p>
+              )}
               <div className="form-grid">
                 <MultiPersonPicker
                   key={"assignee-" + project.id + taskCompany}

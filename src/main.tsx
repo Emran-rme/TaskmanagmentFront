@@ -20,6 +20,7 @@ if ("serviceWorker" in navigator)
 const ContextSelect = lazy(() => import("./pages/ContextSelect"));
 const Workflows = lazy(() => import("./pages/Workflows"));
 const Organization = lazy(() => import("./pages/Organization"));
+const MyWork = lazy(() => import("./pages/MyWork"));
 const PersonalTodos = lazy(() => import("./pages/PersonalTodos"));
 const Master = lazy(() => import("./pages/Master"));
 const ProjectWorkspace = lazy(() => import("./pages/ProjectWorkspace"));
@@ -70,7 +71,8 @@ function App() {
           <Route path="organization" element={<Organization />} />
           <Route path="master" element={<Master />} />
           <Route path="projects/:projectId/*" element={<ProjectWorkspace />} />
-          <Route index element={<Dashboard />} />
+          <Route index element={<MyWork />} />
+          <Route path="dashboard" element={<Dashboard />} />
           <Route path="todos" element={<PersonalTodos />} />
           <Route path="tasks" element={<Tasks />} />
           <Route path="tasks/new" element={<TaskForm />} />
@@ -94,7 +96,15 @@ function App() {
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <Provider store={store}>
-      <ToastContainer position="top-center" theme="colored" rtl limit={3} newestOnTop pauseOnHover closeOnClick />
+      <ToastContainer
+        position="top-center"
+        theme="colored"
+        rtl
+        limit={3}
+        newestOnTop
+        pauseOnHover
+        closeOnClick
+      />
       <BrowserRouter>
         <App />
       </BrowserRouter>
