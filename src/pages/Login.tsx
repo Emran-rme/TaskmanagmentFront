@@ -204,7 +204,7 @@ export default function Login() {
                   }}
                 >
                   {retryIn > 0
-                    ? `ارسال مجدد پس از ${retryIn} ثانیه`
+                    ? `ارسال مجدد پس از ${Math.floor(retryIn / 60)}:${String(retryIn % 60).padStart(2, "0")}`
                     : "ارسال مجدد کد"}
                 </button>
                 <button
