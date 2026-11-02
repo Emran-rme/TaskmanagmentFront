@@ -1,9 +1,9 @@
-const CACHE = "tm-shell-v1";
+const CACHE = "tm-shell-v2";
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
       .open(CACHE)
-      .then((cache) => cache.addAll(["/offline.html", "/app-icon.svg"])),
+      .then((cache) => cache.addAll(["/offline.html", "/branding/hamrah-symbol.png", "/branding/hamrah-logo.png"])),
   );
 });
 self.addEventListener("activate", (event) => {
@@ -43,7 +43,7 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title || "میز کار", {
       body: data.body || "اعلان جدید دارید.",
-      icon: "/app-icon.svg",
+      icon: "/branding/hamrah-symbol.png",
       tag: data.id,
       data: {
         url:

@@ -578,10 +578,10 @@ button, input, select, textarea, option, optgroup {
   border-radius: 24px; background: var(--login-panel); box-shadow: 0 16px 56px #18223d08;
 }
 .login-brand { display: flex; padding-bottom: 18px; margin-bottom: 20px; border-bottom: 1px solid var(--login-line); }
-.login-brand > div { gap: 7px; }
-.login-brand img { width: 112px; height: 36px; object-fit: contain; border-radius: 0; }
-.login-brand p:first-child { color: var(--login-text); font-size: 14px; font-weight: 500; }
-.login-brand p:last-child { color: var(--login-muted); font-size: 10px; margin-top: 5px; }
+
+
+
+
 .login-card h1.login-title { font-size: 24px; font-weight: 700; line-height: 1.7; margin: 0 0 6px; color: var(--login-text); }
 .login-card p.login-description { color: var(--login-muted); font-size: 12px; line-height: 2; margin: 0 0 20px; }
 .login-methods { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 5px; margin-bottom: 20px; border: 1px solid var(--login-line); border-radius: 13px; background: var(--login-field); }
@@ -609,3 +609,16 @@ button, input, select, textarea, option, optgroup {
   .login-form .ui-input { font-size: 16px; }
   .login-card h1.login-title { font-size: 23px; }
 }
+
+/* Supplied Hamrah artwork keeps its native alpha; the light surface preserves wordmark contrast. */
+.hamrah-brand { display: flex; align-items: center; gap: 12px; }
+.hamrah-brand-large { width: 100%; flex-direction: column; justify-content: center; }
+.hamrah-logo-surface { display: inline-flex; align-items: center; justify-content: center; background: #fff; border-radius: 12px; padding: 5px; flex-shrink: 0; }
+.hamrah-brand img { width: 48px; height: 48px; object-fit: contain; border-radius: 0; }
+.hamrah-brand-large img { width: 144px; height: 144px; }
+.hamrah-brand-caption { color: var(--ink); font-size: 14px; font-weight: 500; }
+.reference-brand .reference-mark { width: 52px; height: 52px; border-radius: 12px; background: #fff; padding: 4px; }
+.reference-mark img { width: 44px; height: 44px; object-fit: contain; }
+.login-brand { padding-bottom: 16px; margin-bottom: 18px; }
+.login-brand .hamrah-logo-surface { padding: 0 10px; border-radius: 16px; }
+.login-brand .hamrah-brand-large img { width: 132px; height: 132px; }

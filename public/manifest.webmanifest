@@ -11,16 +11,10 @@
   "theme_color": "#008beb",
   "icons": [
     {
-      "src": "/app-icon-192.png",
-      "sizes": "192x192",
+      "src": "/branding/hamrah-symbol.png",
+      "sizes": "1254x1254",
       "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/app-icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ]
 }

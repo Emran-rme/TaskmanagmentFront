@@ -40,7 +40,7 @@ export default function NotificationListener() {
             await r.showNotification("میز کار", {
               body: "اعلان جدید دارید؛ برای مشاهده وارد سامانه شوید.",
               tag: n.id,
-              icon: "/app-icon.svg",
+              icon: "/branding/hamrah-symbol.png",
               data: { url: "/notifications" },
             });
         })

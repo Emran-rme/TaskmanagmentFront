@@ -22,7 +22,7 @@ import { RootState, signedOut, api, can, useMutateMutation } from "../store";
 import HeaderMenu from "./HeaderMenu";
 import NotificationListener from "./NotificationListener";
 import { useEffect } from "react";
-import { APP_NAME } from "../lib/branding";
+import { APP_NAME, BRAND_ICON } from "../lib/branding";
 import {
   canVisit,
   firstAllowedPage,
@@ -101,7 +101,7 @@ export default function Layout() {
       <NotificationListener />
       <aside className="reference-sidebar" aria-label="منوی اصلی">
         <Link to="/" className="reference-brand">
-          <span className="reference-mark">پ</span>
+          <span className="reference-mark hamrah-logo-surface"><img src={BRAND_ICON} alt="نشان همراه" width={44} height={44} /></span>
           <span>
             <b>{APP_NAME}</b>
             <small>مدیریت وظایف و پروژه‌ها</small>
