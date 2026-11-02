@@ -63,7 +63,9 @@ export default function TaskForm() {
   if (id && !editing) return <ErrorBox message="وظیفه یافت نشد." />;
   const requestedProjectId = projectId || editing?.projectId;
   const selectedProject = w.projects.find(
-    (p) => p.id === requestedProjectId && canProject(user, "tasks.write", p.company, p.id, w),
+    (p) =>
+      p.id === requestedProjectId &&
+      canProject(user, "tasks.write", p.company, p.id, w),
   );
   const taskCompany =
     selectedProject?.company ||
@@ -87,8 +89,12 @@ export default function TaskForm() {
     return <ErrorBox message="مجوز ثبت وظیفه ندارید." />;
   if (editing && !canEditTask(user, editing, w))
     return <ErrorBox message="مجوز ویرایش این وظیفه را ندارید." />;
-  const mayReassign = editing ? canReassignTask(user, editing, w)
-    : user?.role === "Admin" || (project.id ? project.managerId === user?.id : manages(user, project.company));
+  const mayReassign = editing
+    ? canReassignTask(user, editing, w)
+    : user?.role === "Admin" ||
+      (project.id
+        ? project.managerId === user?.id
+        : manages(user, project.company));
   const organization = w.organization?.length
     ? w.organization
     : w.companies.map((name) => ({
@@ -124,7 +130,8 @@ export default function TaskForm() {
       person.enabled !== false &&
       (!!project.id || person.role === "Manager" || person.role === "Admin") &&
       (!editing ||
-        user?.role === "Admin" || editing.approverId === user?.id ||
+        user?.role === "Admin" ||
+        editing.approverId === user?.id ||
         person.id === editing.approverId) &&
       (person.role === "Admin" ||
         person.companies?.includes(project.company) ||
@@ -169,6 +176,7 @@ export default function TaskForm() {
                 method: editing ? "PUT" : "POST",
                 body: {
                   ...body,
+                  isMilestone: data.get("isMilestone") === "on",
                   projectId: project.id || null,
                   version: editing?.version,
                   assigneeId: assigneeIds[0],
@@ -213,6 +221,17 @@ export default function TaskForm() {
                     />
                   </Field>
                 </div>
+                {!!project.id && (
+                  <label className="form-full flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      name="isMilestone"
+                      defaultChecked={editing?.isMilestone || false}
+                    />
+                    نقطه عطف پروژه — هنگام تحویل، برای تأییدکننده پیامک ثبت
+                    می‌شود.
+                  </label>
+                )}
                 <input type="hidden" name="projectId" value={project.id} />
                 {project.id && (
                   <input type="hidden" name="company" value={project.company} />
@@ -289,7 +308,13 @@ export default function TaskForm() {
                             { id: "", name: "بدون پروژه (وظیفه مستقل)" },
                             ...w.projects
                               .filter((p) =>
-                                canProject(user, "tasks.write", p.company, p.id, w),
+                                canProject(
+                                  user,
+                                  "tasks.write",
+                                  p.company,
+                                  p.id,
+                                  w,
+                                ),
                               )
                               .map((p) => ({
                                 id: p.id,

@@ -4,6 +4,7 @@ export interface ModuleField {
   type: string;
   required: boolean;
   hint: string;
+  defaultValue?: string;
 }
 export interface ModuleDefinition {
   id: string;

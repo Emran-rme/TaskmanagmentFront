@@ -19,6 +19,7 @@ export interface User {
   company?: string;
 }
 export interface Task {
+  isMilestone?: boolean;
   createdAt?: string;
   id: string;
   code: string;

@@ -67,7 +67,12 @@ export default function TaskDetail() {
   const managed = taskFlow?.enabled && taskFlow.status === "Waiting";
   const workStage = !managed || taskFlow.stage === "work";
   const reviewStage = managed && taskFlow.stage === "approval";
-  const operationAllowed = tab === "progress" ? workStage : tab === "delivery" ? workStage || reviewStage && reviewer : true;
+  const operationAllowed =
+    tab === "progress"
+      ? workStage
+      : tab === "delivery"
+        ? workStage || (reviewStage && reviewer)
+        : true;
   async function send(url: string, body: unknown, method = "POST") {
     E("");
     S("");
@@ -96,9 +101,14 @@ export default function TaskDetail() {
       >
         <div className="task-detail-columns">
           <section className="task-detail-main" aria-label="جزئیات وظیفه">
-            <TaskWorkflowPanel task={task} reviewer={reviewer}/>
+            <TaskWorkflowPanel task={task} reviewer={reviewer} />
             <div className="task-title-row">
               <h1>{task.title}</h1>
+              {task.isMilestone && (
+                <span className="rounded-full bg-violet-100 px-3 py-1 text-xs text-violet-700 dark:bg-violet-950 dark:text-violet-200">
+                  نقطه عطف پروژه
+                </span>
+              )}
               <div className="flex">
                 {editable && (
                   <Link
@@ -138,12 +148,16 @@ export default function TaskDetail() {
                     disabled={
                       !editable ||
                       isLoading ||
-                      (managed && (status === "بسته شده" ? !reviewStage : !workStage)) ||
+                      (managed &&
+                        (status === "بسته شده" ? !reviewStage : !workStage)) ||
                       (status === "بسته شده" && !reviewer)
                     }
                     onClick={() => {
                       if (status === task.status) return;
-                      if (status === "بسته شده" || managed && status === "حل شده") {
+                      if (
+                        status === "بسته شده" ||
+                        (managed && status === "حل شده")
+                      ) {
                         T("delivery");
                         setOperationsOpen(true);
                         E(
@@ -401,9 +415,12 @@ export default function TaskDetail() {
                         <PersonPicker
                           label="تأییدکننده"
                           name="approverId"
-                          users={w.users.filter((u) => user?.role === "Admin"
-                            ? ["Admin", "Manager"].includes(u.role) || u.id === task.approverId
-                            : u.id === task.approverId)}
+                          users={w.users.filter((u) =>
+                            user?.role === "Admin"
+                              ? ["Admin", "Manager"].includes(u.role) ||
+                                u.id === task.approverId
+                              : u.id === task.approverId,
+                          )}
                           defaultValue={task.approverId}
                         />
                         <Field label="علت تمدید">
@@ -444,7 +461,12 @@ export default function TaskDetail() {
                         </Field>
                         {reviewer && (!managed || reviewStage) && (
                           <label className="flex items-center gap-2 text-sm">
-                            <input type="checkbox" name="accept" defaultChecked={!!reviewStage} disabled={!!reviewStage}/>
+                            <input
+                              type="checkbox"
+                              name="accept"
+                              defaultChecked={!!reviewStage}
+                              disabled={!!reviewStage}
+                            />
                             تأیید تحویل و تکمیل وظیفه
                           </label>
                         )}
@@ -465,8 +487,15 @@ export default function TaskDetail() {
                       </Field>
                     )}
                     <div className="md:col-span-2">
-                      {!operationAllowed && <p role="status">این عملیات در مرحله فعلی گردش‌کار مجاز نیست.</p>}
-                      <button disabled={isLoading || !operationAllowed} className={button}>
+                      {!operationAllowed && (
+                        <p role="status">
+                          این عملیات در مرحله فعلی گردش‌کار مجاز نیست.
+                        </p>
+                      )}
+                      <button
+                        disabled={isLoading || !operationAllowed}
+                        className={button}
+                      >
                         ثبت اطلاعات
                       </button>
                     </div>

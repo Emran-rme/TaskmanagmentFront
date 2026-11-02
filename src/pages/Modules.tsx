@@ -47,7 +47,11 @@ export default function Modules() {
       data.catalog.find((d) => d.id === m.id)?.capability === "sms",
   );
   const activeDefinition = data.catalog.find((m) => m.id === active?.id);
-  const activeEmail = data.installed.find(m => m.enabled && data.catalog.find(d => d.id === m.id)?.capability === "email");
+  const activeEmail = data.installed.find(
+    (m) =>
+      m.enabled &&
+      data.catalog.find((d) => d.id === m.id)?.capability === "email",
+  );
   async function action(url: string, method = "POST", body?: unknown) {
     setFeedback({ error: "", message: "" });
     try {
@@ -116,11 +120,13 @@ export default function Modules() {
           وظیفه، تخصیص پروژه و یادآوری ← صف اعلان‌ها ← ماژول SMTP
         </p>
         <p className="mt-3 text-xs leading-7 text-slate-500 dark:text-slate-400">
-          {activeEmail ? data.emailWorkflowEnabled
-            ? "ماژول ایمیل فعال و به اعلان‌های گردش کار متصل است."
-            : "ماژول فعال است اما کانال ایمیل در تنظیمات گردش کار خاموش است."
-            : "ماژول اطلاع‌رسانی ایمیلی را اضافه کنید، تنظیمات SMTP را ذخیره و ارسال آزمایشی را بررسی کنید؛ سپس آن را فعال کنید."}
-          {" "}ایمیل و پیامک مستقل هستند. نتیجه ارسال و تلاش مجدد در مرکز اعلان‌ها قابل پیگیری است.
+          {activeEmail
+            ? data.emailWorkflowEnabled
+              ? "ماژول ایمیل فعال و به اعلان‌های گردش کار متصل است."
+              : "ماژول فعال است اما کانال ایمیل در تنظیمات گردش کار خاموش است."
+            : "ماژول اطلاع‌رسانی ایمیلی را اضافه کنید، تنظیمات SMTP را ذخیره و ارسال آزمایشی را بررسی کنید؛ سپس آن را فعال کنید."}{" "}
+          ایمیل و پیامک مستقل هستند. نتیجه ارسال و تلاش مجدد در مرکز اعلان‌ها
+          قابل پیگیری است.
         </p>
       </Card>
       <div aria-live="polite">
@@ -165,7 +171,9 @@ export default function Modules() {
                 <p className="mb-4 text-xs text-brand dark:text-sky-300">
                   {def.capability === "workflow"
                     ? "اتصال به رویدادهای گردش کار"
-                    : def.capability === "email" ? "ارائه‌دهنده ایمیل" : "ارائه‌دهنده پیامک"}
+                    : def.capability === "email"
+                      ? "ارائه‌دهنده ایمیل"
+                      : "ارائه‌دهنده پیامک"}
                 </p>
                 <button
                   disabled={!!installed || isLoading}
@@ -234,7 +242,14 @@ export function ModuleForm({
   const [enabled, setEnabled] = useState(installed.enabled);
   const email = definition.capability === "email";
   const [values, setValues] = useState<Record<string, string>>(() => ({
-    ...(email ? { port: "587", startTls: "true", subject: "اعلان مدیریت وظایف", fromName: "مدیریت وظایف" } : {}),
+    ...(email
+      ? {
+          port: "587",
+          startTls: "true",
+          subject: "اعلان مدیریت وظایف",
+          fromName: "مدیریت وظایف",
+        }
+      : {}),
     ...installed.values,
   }));
   const [events, setEvents] = useState(installed.events || []);
@@ -278,9 +293,15 @@ export function ModuleForm({
           <div key={f.key}>
             <Field label={f.label}>
               {email && f.key === "startTls" ? (
-                <SettingsToggle label="استفاده از اتصال امن" description="برای سرورهای SMTP دارای STARTTLS روشن باشد."
+                <SettingsToggle
+                  label="استفاده از اتصال امن"
+                  description="برای سرورهای SMTP دارای STARTTLS روشن باشد."
                   checked={values.startTls !== "false"}
-                  onChange={(checked) => { setValues(v => ({ ...v, startTls: String(checked) })); setDirty(true); }} />
+                  onChange={(checked) => {
+                    setValues((v) => ({ ...v, startTls: String(checked) }));
+                    setDirty(true);
+                  }}
+                />
               ) : f.type === "textarea" ? (
                 <SmsTemplateEditor
                   label={f.label}
@@ -310,13 +331,14 @@ export function ModuleForm({
                 />
               )}
             </Field>
-            {(definition.id === "sms-rahyab" || email) && f.type === "textarea" && (
-              <SmsTemplatePreview
-                value={values[f.key] || ""}
-                kind={f.key}
-                siteUrl={values.siteUrl || window.location.origin}
-              />
-            )}
+            {(definition.id === "sms-rahyab" || email) &&
+              f.type === "textarea" && (
+                <SmsTemplatePreview
+                  value={values[f.key] || f.defaultValue || ""}
+                  kind={f.key}
+                  siteUrl={values.siteUrl || window.location.origin}
+                />
+              )}
             {f.hint && (
               <p className="mt-2 text-xs leading-6 text-slate-500 dark:text-slate-400">
                 {f.hint}
@@ -356,8 +378,9 @@ export function ModuleForm({
           description={
             definition.capability === "workflow"
               ? "این ماژول برای رویدادهای انتخاب‌شده اجرا می‌شود؛ مستقل از کانال پیامک."
-              : email ? "این ماژول برای ایمیل‌های وظیفه، تخصیص پروژه و یادآوری‌ها استفاده می‌شود؛ مستقل از پیامک."
-              : "این ماژول برای پیامک‌های تخصیص وظیفه، پروژه و یادآوری‌ها استفاده می‌شود."
+              : email
+                ? "این ماژول برای ایمیل‌های وظیفه، تخصیص پروژه و یادآوری‌ها استفاده می‌شود؛ مستقل از پیامک."
+                : "این ماژول برای پیامک‌های تخصیص وظیفه، پروژه و یادآوری‌ها استفاده می‌شود."
           }
           checked={enabled}
           onChange={(v) => {
@@ -392,7 +415,9 @@ export function ModuleForm({
       </form>
       {definition.capability === "sms" || email ? (
         <div className="mt-6 space-y-3 border-t border-white/80 dark:border-white/10 pt-5">
-          <Field label={email ? "ایمیل گیرنده آزمایشی" : "موبایل گیرنده آزمایشی"}>
+          <Field
+            label={email ? "ایمیل گیرنده آزمایشی" : "موبایل گیرنده آزمایشی"}
+          >
             <input
               className={input}
               dir="ltr"
@@ -413,7 +438,8 @@ export function ModuleForm({
             {email ? "ارسال ایمیل آزمایشی" : "ارسال پیامک آزمایشی"}
           </button>
           <p className="text-xs leading-7 text-slate-500 dark:text-slate-400">
-            {email ? "ابتدا تنظیمات را ذخیره کنید. ارسال آزمایشی واقعی است. ایمیل کاربران را در پرونده پرسنلی یا تنظیمات ← گیرندگان ثبت کنید."
+            {email
+              ? "ابتدا تنظیمات را ذخیره کنید. ارسال آزمایشی واقعی است. ایمیل کاربران را در پرونده پرسنلی یا تنظیمات ← گیرندگان ثبت کنید."
               : "ارسال آزمایشی واقعی است و ممکن است هزینه داشته باشد؛ ابتدا تنظیمات را ذخیره کنید. موبایل کاربران را در پرونده پرسنلی یا تنظیمات ← گیرندگان ثبت کنید."}
           </p>
         </div>
@@ -440,6 +466,21 @@ const smsParameterOptions = [
   ["url", "لینک مستقیم"],
   ["taskUrl", "لینک وظیفه"],
   ["projectUrl", "لینک پروژه"],
+  ["Task_Title", "عنوان وظیفه"],
+  ["Project_Name", "پروژه"],
+  ["Due_Date", "مهلت"],
+  ["Priority", "اولویت"],
+  ["Time_Remaining", "زمان باقی‌مانده"],
+  ["Time_Overdue", "میزان تأخیر"],
+  ["New_Status", "وضعیت جدید"],
+  ["Sender_Name", "اقدام‌کننده"],
+  ["Role_Name", "نقش"],
+  ["Start_Date", "تاریخ آغاز"],
+  ["Milestone_Name", "نقطه عطف"],
+  ["Progress_Percent", "پیشرفت پروژه"],
+  ["Open_Tasks", "وظایف باز"],
+  ["Overdue_Tasks", "وظایف با تأخیر"],
+  ["Comment_Snippet", "بخشی از نظر"],
 ] as const;
 function SmsTemplateEditor({
   value,
@@ -470,7 +511,8 @@ function SmsTemplateEditor({
         node?.setSelectionRange(result.caret, result.caret);
       });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "درج پارامتر ناموفق بود.";
+      const message =
+        err instanceof Error ? err.message : "درج پارامتر ناموفق بود.";
       setError(message);
       notifyError(message);
     }
@@ -551,6 +593,21 @@ function SmsTemplatePreview({
     projectUrl: general
       ? ""
       : `${siteUrl.replace(/\/$/, "")}/projects/00000000-0000-0000-0000-000000000002`,
+    Task_Title: "بررسی گزارش",
+    Project_Name: "راه‌اندازی سامانه",
+    Due_Date: "۱۴۰۵/۰۸/۱۵",
+    Priority: "بالا",
+    Time_Remaining: "۲ روز",
+    Time_Overdue: "۱ روز",
+    New_Status: "حل شده",
+    Sender_Name: "علی رضایی",
+    Role_Name: "مدیر پروژه",
+    Start_Date: "۱۴۰۵/۰۸/۰۱",
+    Milestone_Name: "تحویل نسخه نخست",
+    Progress_Percent: "۷۵",
+    Open_Tasks: "۸",
+    Overdue_Tasks: "۲",
+    Comment_Snippet: "لطفاً گزارش را بررسی کنید",
     recipientName: "علی رضایی",
     type: general ? "اعلان" : project ? "پروژه" : "وظیفه",
     title: general ? "" : project ? "راه‌اندازی سامانه" : "بررسی گزارش",
