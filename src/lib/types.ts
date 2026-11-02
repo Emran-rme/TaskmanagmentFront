@@ -4,6 +4,7 @@ export interface User {
   companyPermissions?: Record<string, string[]>;
   managedCompanies?: string[];
   companies?: string[];
+  projectCompanies?: string[];
   position?: string;
   unit?: string;
   roleNames?: string[];

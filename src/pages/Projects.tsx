@@ -36,8 +36,8 @@ export default function Projects() {
     [error, E] = useState("");
   const contentRef = useRef<HTMLDivElement>(null);
   const open =
-    can(actor, "projects.write") &&
-    (searchParams.get("new") === "true" || editing !== null);
+    (editing !== null && !!w && canManageProject(actor, editing, w)) ||
+    (can(actor, "projects.write") && searchParams.get("new") === "true");
   function closeForm() {
     setEditing(null);
     setCompany("");
@@ -65,7 +65,10 @@ export default function Projects() {
       (node) =>
         isCompany(node.type) &&
         w.companies.includes(node.name) &&
-        can(actor, "projects.write", node.name),
+        (can(actor, "projects.write", node.name) ||
+          (!!editing &&
+            editing.company === node.name &&
+            canManageProject(actor, editing, w))),
     )
     .map((node) => node.id);
   const unitIds = organization
@@ -216,7 +219,7 @@ export default function Projects() {
                     label="مدیر پروژه"
                     name="managerId"
                     users={w.users.filter((u) =>
-                      u.companies?.includes(company),
+                      (u.projectCompanies ?? u.companies)?.includes(company),
                     )}
                     defaultValue={editing?.managerId}
                   />

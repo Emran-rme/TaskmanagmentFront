@@ -39,5 +39,10 @@ export const canReassignTask = (u: User | null, t: Task, w: Workspace) =>
     (!!t.projectId &&
       w.projects.some((p) => p.id === t.projectId && p.managerId === u?.id)));
 export const canManageProject = (u: User | null, p: Project, w: Workspace) =>
-  canProject(u, "projects.write", p.company, p.id, w) &&
-  (u?.role === "Admin" || p.managerId === u?.id);
+  !!u &&
+  u.enabled !== false &&
+  (u.role === "Admin" ||
+    (p.managerId === u.id &&
+      (can(u, "projects.read", p.company) ||
+        can(u, "projects.write", p.company)) &&
+      !!w.projectPermissions?.[p.id]?.includes("projects.write")));
