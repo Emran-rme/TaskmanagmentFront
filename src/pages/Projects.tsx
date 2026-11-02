@@ -367,7 +367,7 @@ export default function Projects() {
         !w.projects.some(
           (p) => p.start.slice(0, 10) === searchParams.get("activeOn")!,
         ) && <p>در این تاریخ پروژه‌ای در محدوده دسترسی شما وجود ندارد.</p>}
-      <div className="grid items-start gap-5 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid items-start gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {w.projects
           .filter(
             (p) =>

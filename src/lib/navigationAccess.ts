@@ -12,8 +12,9 @@ export const canViewWorkspace = (user: User | null) =>
 export function canVisit(user: User | null, path: string): boolean {
   if (!user || user.enabled === false) return false;
   if (path === "/") return true;
-  if (path === "/dashboard" || path === "/select-context")
-    return canViewWorkspace(user);
+  if (/^\/dashboard\/?$/.test(path))
+    return ["Admin", "Manager"].includes(user.role) && canViewWorkspace(user);
+  if (path === "/select-context") return canViewWorkspace(user);
   if (path === "/master") return user.role === "Admin" && user.company === "*";
   if (path === "/modules" || path === "/workflows")
     return user.role === "Admin";

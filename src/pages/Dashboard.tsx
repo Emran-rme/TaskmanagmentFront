@@ -17,27 +17,20 @@ import { assignedNames, assignedIds } from "../lib/types";
 import { fa, iso, jalali, monthDays, months, weekdays } from "../lib/jalali";
 import { toJalaali } from "jalaali-js";
 export default function Dashboard() {
+  const actor = useSelector((s: RootState) => s.auth.user);
   const { data: w, error } = useDashboardQuery(undefined, {
+    skip: actor?.role !== "Admin" && actor?.role !== "Manager",
     pollingInterval: 60000,
     skipPollingIfUnfocused: true,
     refetchOnFocus: true,
   });
   const [projectId, setProjectId] = useState("");
-  const actor = useSelector((s: RootState) => s.auth.user);
+  if (actor?.role !== "Admin" && actor?.role !== "Manager")
+    return <ErrorBox message="گزارش مدیریتی فقط برای سطوح مدیریت فعال است." />;
   if (error) return <ErrorBox message={errorText(error)} />;
   if (!w) return <Loading />;
-  const scopeIds = new Set(
-    w.users.filter((u) => u.id === actor?.id || u.assignable).map((u) => u.id),
-  );
-  const tasks = w.tasks.filter(
-    (t) =>
-      (!projectId || t.projectId === projectId) &&
-      (actor?.role === "Admin" ||
-        assignedIds(t).some((id) => scopeIds.has(id)) ||
-        w.projects.some(
-          (p) => p.id === t.projectId && p.managerId === actor?.id,
-        )),
-  );
+  // The API supplies the authorized management scope; the browser only filters the selected project.
+  const tasks = w.tasks.filter((t) => !projectId || t.projectId === projectId);
   const today = iso(new Date()),
     tomorrow = iso(new Date(Date.now() + 86400000));
   const completed = tasks.filter((t) => t.status === "بسته شده");
@@ -98,8 +91,8 @@ export default function Dashboard() {
     <div className="reference-dashboard">
       <div className="rd-welcome">
         <div>
-          <h1>به سامانه مدیریت وظایف خوش آمدید</h1>
-          <p>وضعیت کلی وظایف و عملکرد همکاران را در یک نگاه مشاهده کنید.</p>
+          <h1>گزارش مدیریتی</h1>
+          <p>وضعیت وظایف و عملکرد زیرمجموعه مجاز خود را مشاهده کنید.</p>
         </div>
         <span>
           <CalendarDays size={18} />
@@ -114,7 +107,7 @@ export default function Dashboard() {
       <div className="rd-filter">
         <select
           className={input}
-          aria-label="پروژه میز کار"
+          aria-label="پروژه گزارش مدیریتی"
           value={projectId}
           onChange={(e) => setProjectId(e.target.value)}
         >

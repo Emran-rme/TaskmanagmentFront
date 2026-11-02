@@ -93,6 +93,10 @@ export default function Workflows() {
     if (!definition) return;
     open({
       ...definition,
+      company:
+        definition.company === "*"
+          ? workspace!.companies[0] || ""
+          : definition.company,
       id: randomUuid(),
       published: false,
       active: false,
@@ -235,11 +239,13 @@ export default function Workflows() {
                   <strong>{d.name}</strong>
                 </div>
                 <span>
-                  {d.company} ·{" "}
+                  {d.company === "*" ? "همه شرکت‌ها" : d.company} ·{" "}
                   {d.projectId
                     ? workspace.projects.find((p) => p.id === d.projectId)
                         ?.name || "پروژه"
-                    : "پیش‌فرض شرکت"}
+                    : d.company === "*"
+                      ? "پیش‌فرض سامانه"
+                      : "پیش‌فرض شرکت"}
                 </span>
                 <div className="workflow-version-meta">
                   <span>
@@ -278,17 +284,26 @@ export default function Workflows() {
                   </span>
                 </div>
               </div>
+              {definition.company === "*" && (
+                <p className="mb-4 text-sm leading-7">
+                  این گردش‌کار پایه برای همه پروژه‌ها اجرا می‌شود. برای
+                  شخصی‌سازی، آن را کپی کنید و شرکت یا پروژه را انتخاب و نسخه
+                  جدید را فعال کنید. اولویت با گردش‌کار اختصاصی پروژه، سپس شرکت
+                  و سپس این الگو است.
+                </p>
+              )}
               <div className="workflow-toolbar workflow-actions">
-                {catalog.definitions.some((d) => d.id === definition.id) && (
-                  <button
-                    className={`${secondary} workflow-delete-trigger`}
-                    disabled={isLoading || dirty}
-                    onClick={() => setDeleteOpen(true)}
-                  >
-                    <Trash2 size={15} />
-                    حذف گردش‌کار و زیرمجموعه‌ها
-                  </button>
-                )}
+                {definition.company !== "*" &&
+                  catalog.definitions.some((d) => d.id === definition.id) && (
+                    <button
+                      className={`${secondary} workflow-delete-trigger`}
+                      disabled={isLoading || dirty}
+                      onClick={() => setDeleteOpen(true)}
+                    >
+                      <Trash2 size={15} />
+                      حذف گردش‌کار و زیرمجموعه‌ها
+                    </button>
+                  )}
                 <button
                   className={secondary}
                   onClick={clone}
@@ -307,13 +322,13 @@ export default function Workflows() {
                 )}
                 <button
                   className={button}
-                  disabled={isLoading || dirty}
+                  disabled={isLoading || dirty || definition.company === "*"}
                   onClick={() => setPending(definition)}
                 >
                   <Rocket size={15} />
                   {readonly ? "فعال‌سازی این نسخه" : "اعتبارسنجی و انتشار"}
                 </button>
-                {definition.active && (
+                {definition.active && definition.company !== "*" && (
                   <button
                     className={secondary}
                     disabled={isLoading}
@@ -385,6 +400,9 @@ export default function Workflows() {
                       setDirty(true);
                     }}
                   >
+                    {definition.company === "*" && (
+                      <option value="*">همه شرکت‌ها (پیش‌فرض سامانه)</option>
+                    )}
                     {workspace.companies.map((c) => (
                       <option key={c}>{c}</option>
                     ))}
@@ -406,7 +424,11 @@ export default function Workflows() {
                       setDirty(true);
                     }}
                   >
-                    <option value="">پیش‌فرض شرکت</option>
+                    <option value="">
+                      {definition.company === "*"
+                        ? "پیش‌فرض همه پروژه‌ها"
+                        : "پیش‌فرض شرکت"}
+                    </option>
                     {workspace.projects
                       .filter((p) => p.company === definition.company)
                       .map((p) => (
@@ -534,7 +556,10 @@ export default function Workflows() {
                   }}
                 />
                 {node && (
-                  <WorkflowNodeDrawer key={node.id} onClose={() => setSelected("")}>
+                  <WorkflowNodeDrawer
+                    key={node.id}
+                    onClose={() => setSelected("")}
+                  >
                     <div className="workflow-properties">
                       <div
                         className={`workflow-inspector-heading workflow-kind-${node.kind}`}

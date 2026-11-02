@@ -14,11 +14,13 @@ export default function DashboardViews({
   workspace: Workspace;
   project?: Project;
 }) {
-  const userId = useSelector((state: RootState) => state.auth.user?.id);
+  const user = useSelector((state: RootState) => state.auth.user);
+  const userId = user?.id;
   return (
     <SavedDashboard
       key={userId}
       storageKey={`tm-dashboard-view-${userId}`}
+      allowAnalytics={user?.role === "Admin" || user?.role === "Manager"}
       workspace={w}
       project={project}
     />
@@ -28,10 +30,12 @@ function SavedDashboard({
   workspace: w,
   project,
   storageKey,
+  allowAnalytics,
 }: {
   workspace: Workspace;
   project?: Project;
   storageKey: string;
+  allowAnalytics: boolean;
 }) {
   const [view, setView] = useState(() => {
     try {
@@ -62,33 +66,35 @@ function SavedDashboard({
     .sort((a, b) => b.open - a.open);
   return (
     <div className="space-y-5">
-      <div
-        className="dashboard-view-switch"
-        role="group"
-        aria-label="نمای میز کار"
-      >
-        {[
-          { id: "summary", label: "خلاصه و کارتی", Icon: LayoutDashboard },
-          { id: "analytics", label: "تحلیلی و نموداری", Icon: BarChart3 },
-        ].map(({ id, label, Icon }) => (
-          <button
-            key={id}
-            type="button"
-            className={view === id ? button : secondary}
-            aria-pressed={view === id}
-            onClick={() => {
-              setView(id);
-              try {
-                localStorage.setItem(storageKey, id);
-              } catch {}
-            }}
-          >
-            <Icon size={16} />
-            {label}
-          </button>
-        ))}
-      </div>
-      {view === "summary" ? (
+      {allowAnalytics && (
+        <div
+          className="dashboard-view-switch"
+          role="group"
+          aria-label="نمای میز کار"
+        >
+          {[
+            { id: "summary", label: "خلاصه و کارتی", Icon: LayoutDashboard },
+            { id: "analytics", label: "تحلیلی و نموداری", Icon: BarChart3 },
+          ].map(({ id, label, Icon }) => (
+            <button
+              key={id}
+              type="button"
+              className={view === id ? button : secondary}
+              aria-pressed={view === id}
+              onClick={() => {
+                setView(id);
+                try {
+                  localStorage.setItem(storageKey, id);
+                } catch {}
+              }}
+            >
+              <Icon size={16} />
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+      {!allowAnalytics || view === "summary" ? (
         <WorkspaceOverview workspace={w} project={project} />
       ) : (
         <div className="dashboard-analytics">

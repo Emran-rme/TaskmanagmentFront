@@ -34,7 +34,6 @@ const nav = [
   ["/tasks", "وظایف", ListTodo, "work"],
   ["/todos", "کارهای روزانه", ListTodo, "work"],
   ["/notifications", "اعلان‌ها", Bell, "work"],
-  ["/dashboard", "داشبورد", Grid2X2, "management"],
   ["/workflows", "گردش‌کارها", Grid2X2, "management"],
   ["/master", "اطلاعات پایه", Grid2X2, "management"],
 ] as const;
@@ -57,7 +56,12 @@ export default function Layout() {
       ? "میز کار"
       : nav.find(
           ([path]) => path !== "/" && location.pathname.startsWith(path),
-        )?.[1] || (location.pathname === "/settings" ? "تنظیمات" : "فضای کار");
+        )?.[1] ||
+        (location.pathname === "/dashboard"
+          ? "گزارش مدیریتی"
+          : location.pathname === "/settings"
+            ? "تنظیمات"
+            : "فضای کار");
   const refresh = () =>
     dispatch(
       api.util.invalidateTags([
@@ -169,6 +173,17 @@ export default function Layout() {
             )}
           </div>
           <div className="reference-tools">
+            {canVisit(user, "/dashboard") && (
+              <Link
+                to="/dashboard"
+                aria-current={
+                  location.pathname === "/dashboard" ? "page" : undefined
+                }
+              >
+                <LayoutDashboard size={15} />
+                گزارش مدیریتی
+              </Link>
+            )}
             {canVisit(user, "/settings") && (
               <Link to="/settings">
                 <Settings size={14} />
