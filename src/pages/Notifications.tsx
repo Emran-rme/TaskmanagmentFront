@@ -185,7 +185,7 @@ export default function Notifications() {
                   />
                   <p className="text-[10px] text-slate-400">
                     {x.channel} · {jalali(x.createdAt)} · {x.status}
-                    {x.moduleId && " · ماژول: " + x.moduleId}
+                    {x.moduleId && " · ماژول: " + (x.moduleId === "sms-rahyab" ? "نواوران" : x.moduleId)}
                     {x.providerReference &&
                       " · شناسه سرویس: " + x.providerReference}
                   </p>
