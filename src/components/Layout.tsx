@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import {
   NavLink,
   Outlet,
@@ -28,14 +29,14 @@ import {
   canViewWorkspace,
 } from "../lib/navigationAccess";
 const nav = [
-  ["/", "کارهای من", ListTodo],
-  ["/dashboard", "داشبورد", LayoutDashboard],
-  ["/tasks", "وظایف تیم", ListTodo],
-  ["/projects", "پروژه‌ها", FolderKanban],
-  ["/todos", "کارهای روزانه", ListTodo],
-  ["/workflows", "گردش‌کارها", Grid2X2],
-  ["/master", "اطلاعات پایه", Grid2X2],
-  ["/notifications", "اعلان‌ها", Bell],
+  ["/", "میز کار", LayoutDashboard, "work"],
+  ["/projects", "پروژه‌ها", FolderKanban, "work"],
+  ["/tasks", "وظایف", ListTodo, "work"],
+  ["/todos", "کارهای روزانه", ListTodo, "work"],
+  ["/notifications", "اعلان‌ها", Bell, "work"],
+  ["/dashboard", "داشبورد", Grid2X2, "management"],
+  ["/workflows", "گردش‌کارها", Grid2X2, "management"],
+  ["/master", "اطلاعات پایه", Grid2X2, "management"],
 ] as const;
 export default function Layout() {
   const user = useSelector((s: RootState) => s.auth.user);
@@ -50,9 +51,10 @@ export default function Layout() {
         location.pathname + location.search,
       );
   }, [location.pathname, location.search]);
+  const visibleNav = nav.filter(([path]) => canVisit(user, path));
   const title =
     location.pathname === "/"
-      ? "کارهای من"
+      ? "میز کار"
       : nav.find(
           ([path]) => path !== "/" && location.pathname.startsWith(path),
         )?.[1] || (location.pathname === "/settings" ? "تنظیمات" : "فضای کار");
@@ -101,15 +103,22 @@ export default function Layout() {
             <small>مدیریت وظایف و پروژه‌ها</small>
           </span>
         </Link>
-        <nav>
-          {nav
-            .filter(([path]) => canVisit(user, path))
-            .map(([path, label, Icon]) => (
-              <NavLink key={path} to={path} end={path === "/"}>
+        <nav aria-label="بخش‌های سامانه">
+          {visibleNav.map(([path, label, Icon, group], index) => (
+            <Fragment key={path}>
+              {index > 0 && group !== visibleNav[index - 1][3] && (
+                <div
+                  role="separator"
+                  aria-label="گزارش و مدیریت"
+                  className="reference-nav-separator"
+                />
+              )}
+              <NavLink to={path} end={path === "/"}>
                 <Icon size={19} strokeWidth={1.6} />
                 <span>{label}</span>
               </NavLink>
-            ))}
+            </Fragment>
+          ))}
         </nav>
         <div className="reference-sidefoot">
           {APP_NAME}

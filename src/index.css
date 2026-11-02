@@ -559,3 +559,6 @@ button, input, select, textarea, option, optgroup {
 /* Persian toast text follows the application's font and remains readable on mobile. */
 .Toastify__toast { font-family: inherit; line-height: 1.9; }
 .Toastify__toast-body { overflow-wrap: anywhere; }
+
+.reference-nav-separator { border-top: 1px solid #ffffff24; margin: 8px 12px; }
+@media(max-width:767px) { .reference-nav-separator { border-top: 0; border-right: 1px solid #ffffff24; margin: 8px 6px; flex-shrink: 0; } }
