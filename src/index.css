@@ -131,12 +131,6 @@ button, input, select, textarea { font: inherit; }
 .app-content th { padding: 13px; background: var(--page); color: var(--muted); font-size: 13px; }
 .app-content td { padding: 12px; border-top: 1px solid var(--line); font-size: 14px; }
 .app-content tbody tr:hover { background: var(--page); }
-.login-screen { background: radial-gradient(circle at 12% 18%,#7770c1,#2e3456 55%,#1c2444); padding: 24px 15px; }
-.login-card { max-width: 410px; padding: 30px; border-radius:6px; box-shadow: 0 20px 70px #0005; }
-.login-brand img { width: 62px; height: 62px; border-radius:6px; object-fit: contain; }
-.login-card h1 { margin: 5px 0 8px; font-size: 28px; color: var(--ink); }
-.login-card > p { margin-bottom: 20px; color: var(--muted); font-size: 14px; }
-.login-card label { font-size: 14px; }
 .app-mobile-nav { background: var(--surface); border-color: var(--line); border-radius:6px; }
 @media (min-width: 768px) and (max-width: 1050px) {
   .app-sidebar { width: 218px; }
@@ -154,8 +148,6 @@ button, input, select, textarea { font: inherit; }
   .ui-card { padding: 17px; border-radius:6px; }
   .ui-input { font-size: 16px; min-height: 49px; }
   .ui-button, .ui-secondary { min-height: 44px; font-size: 15px; }
-  .login-card { padding: 26px 19px; max-height: 94dvh; overflow-y: auto; }
-  .login-card label { font-size: 16px; }
   .app-mobile-nav { bottom: 0; left: 0; right: 0; border-radius: 0; padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
 }
 
@@ -562,3 +554,58 @@ button, input, select, textarea, option, optgroup {
 
 .reference-nav-separator { border-top: 1px solid #ffffff24; margin: 8px 12px; }
 @media(max-width:767px) { .reference-nav-separator { border-top: 0; border-right: 1px solid #ffffff24; margin: 8px 6px; flex-shrink: 0; } }
+
+/* Login styles are scoped so shared forms and context selection keep their layout. */
+.login-screen {
+  --login-bg: #f5f6fa; --login-panel: #fff; --login-field: #f8f9fc;
+  --login-text: #242a40; --login-muted: #68718a; --login-line: #e4e7f0;
+  --login-accent: #6656b5;
+  position: relative; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; min-height: 100vh; min-height: 100dvh;
+  padding: 24px 20px; background: var(--login-bg); color: var(--login-text);
+  background-image: radial-gradient(ellipse at 50% 0, #e8e5f5 0, transparent 62%);
+}
+.dark .login-screen {
+  --login-bg: #121724; --login-panel: #1b2233; --login-field: #161d2d;
+  --login-text: #eef0f8; --login-muted: #adb6cd; --login-line: #30394e;
+  --login-accent: #9f91ed;
+  background-image: radial-gradient(ellipse at 50% 0, #25283f 0, transparent 65%);
+}
+.login-theme { position: absolute; top: 20px; left: 24px; }
+.login-theme button { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--login-line); background: var(--login-panel); color: var(--login-muted); box-shadow: none; }
+.ui-card.login-card {
+  width: 100%; max-width: 440px; padding: 28px; border: 1px solid var(--login-line);
+  border-radius: 24px; background: var(--login-panel); box-shadow: 0 16px 56px #18223d08;
+}
+.login-brand { display: flex; padding-bottom: 18px; margin-bottom: 20px; border-bottom: 1px solid var(--login-line); }
+.login-brand > div { gap: 7px; }
+.login-brand img { width: 112px; height: 36px; object-fit: contain; border-radius: 0; }
+.login-brand p:first-child { color: var(--login-text); font-size: 14px; font-weight: 500; }
+.login-brand p:last-child { color: var(--login-muted); font-size: 10px; margin-top: 5px; }
+.login-card h1.login-title { font-size: 24px; font-weight: 700; line-height: 1.7; margin: 0 0 6px; color: var(--login-text); }
+.login-card p.login-description { color: var(--login-muted); font-size: 12px; line-height: 2; margin: 0 0 20px; }
+.login-methods { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 5px; margin-bottom: 20px; border: 1px solid var(--login-line); border-radius: 13px; background: var(--login-field); }
+.login-method { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; border-radius: 9px; font-size: 12px; color: var(--login-muted); transition: color 150ms, background-color 150ms; }
+.login-method[aria-pressed=true] { background: var(--login-panel); color: var(--login-accent); box-shadow: 0 2px 6px #17233b0a; font-weight: 500; }
+.login-method:disabled { opacity: .6; cursor: wait; }
+.login-form { display: grid; gap: 16px; }
+.login-form > div.space-y-2 > :not([hidden]) ~ :not([hidden]) { margin-top: 6px; }
+.login-form label { color: var(--login-text); font-size: 12px; font-weight: 500; }
+.login-form .ui-input { min-height: 44px; border: 1px solid var(--login-line); border-radius: 11px; padding: 9px 13px; background: var(--login-field); color: var(--login-text); font-size: 14px; transition: border-color 150ms, box-shadow 150ms; }
+.login-form input::placeholder { color: var(--login-muted); opacity: .8; font-size: 12px; text-align: right; }
+.login-form .ui-input:focus { border-color: var(--login-accent); box-shadow: 0 0 0 3px #8d7ad31a; --tw-ring-color: transparent; }
+.login-form .login-submit { width: 100%; min-height: 48px; border-radius: 11px; margin-top: 5px; background: #6656b5; border-color: #6656b5; color: #fff; font-size: 13px; font-weight: 500; box-shadow: none; }
+.login-form .login-submit:hover { background: #57479f; border-color: #57479f; }
+.login-form .login-submit:disabled { opacity: .6; cursor: wait; }
+.login-method:focus-visible, .login-form button:focus-visible { outline: 2px solid var(--login-accent); outline-offset: 3px; }
+.login-footer { margin-top: 16px; text-align: center; color: var(--login-muted); font-size: 10px; line-height: 2; }
+.login-spinner { animation: login-spin 1s linear infinite; }
+@keyframes login-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .login-spinner { animation: none; } .login-method, .login-form .ui-input { transition: none; } }
+@media(max-width:480px) {
+  .login-screen { padding: 76px 16px 24px; }
+  .ui-card.login-card { padding: 26px 23px; border-radius: 20px; }
+  .login-theme { top: 18px; left: 18px; }
+  .login-form .ui-input { font-size: 16px; }
+  .login-card h1.login-title { font-size: 23px; }
+}

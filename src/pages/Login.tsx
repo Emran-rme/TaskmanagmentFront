@@ -6,6 +6,7 @@ import { api, useMutateMutation, signedIn, errorText } from "../store";
 import { Card, Field, input, button, ErrorBox } from "../components/ui";
 import ThemeToggle from "../components/ThemeToggle";
 import Brand from "../components/Brand";
+import { ArrowLeft, KeyRound, MessageSquare, LoaderCircle } from "lucide-react";
 export default function Login() {
   const demo = import.meta.env.VITE_DEMO_MODE === "true";
   const [login, { isLoading }] = useMutateMutation(),
@@ -51,25 +52,25 @@ export default function Login() {
   const dispatch = useDispatch(),
     navigate = useNavigate();
   return (
-    <div className="login-screen relative flex min-h-screen items-center justify-center bg-gradient-to-br from-[#e4f5ff] dark:from-[#081426] via-[#f2f7ff] dark:via-slate-900 to-[#dceaff] dark:to-slate-950 p-4 pt-24 font-sans sm:pt-4">
-      <div className="absolute left-4 top-4">
+    <div className="login-screen">
+      <div className="login-theme">
         <ThemeToggle />
       </div>
-      <Card className="login-card w-full max-w-md">
-        <div className="login-brand mb-6 flex">
+      <Card className="login-card">
+        <div className="login-brand">
           <Brand large />
         </div>
-        <h1 className="mb-3 text-2xl font-bold text-navy dark:text-sky-50">
+        <h1 className="login-title">
           خوش آمدید
         </h1>
-        <p className="mb-8 text-sm text-slate-400">
+        <p className="login-description">
           {mode === "sms"
             ? "ورود به حساب داخلی با نام کاربری یا شماره موبایل ثبت‌شده و کد پیامکی."
             : "برای ورود، حساب کاربری و رمز عبور خود را وارد کنید."}
         </p>
         {!demo && (
           <div
-            className="mb-5 flex gap-2"
+            className="login-methods"
             role="group"
             aria-label="روش احراز هویت"
           >
@@ -79,24 +80,21 @@ export default function Login() {
                 key={value}
                 aria-pressed={mode === value}
                 disabled={isLoading}
-                className={
-                  mode === value
-                    ? button
-                    : "rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-600"
-                }
+                className="login-method"
                 onClick={() => {
                   setMode(value);
                   setChallenge(null);
                   setError("");
                 }}
               >
-                {value === "sms" ? "ورود با کد پیامکی" : "ورود با رمز"}
+                {value === "sms" ? <MessageSquare size={17} aria-hidden="true" /> : <KeyRound size={17} aria-hidden="true" />}
+                {value === "sms" ? "کد پیامکی" : "رمز عبور"}
               </button>
             ))}
           </div>
         )}
         <form
-          className="space-y-5"
+          className="login-form"
           onSubmit={async (e) => {
             e.preventDefault();
             setError("");
@@ -136,6 +134,10 @@ export default function Login() {
                 <input
                   className={input}
                   name="username"
+                  dir="ltr"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  placeholder="نام کاربری خود را وارد کنید"
                   defaultValue={demo ? "admin" : ""}
                   autoComplete="username"
                   required
@@ -146,6 +148,8 @@ export default function Login() {
                   className={input}
                   name="password"
                   type="password"
+                  dir="ltr"
+                  placeholder="رمز عبور خود را وارد کنید"
                   defaultValue={demo ? "1234" : ""}
                   autoComplete="current-password"
                   required
@@ -222,6 +226,8 @@ export default function Login() {
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 name="identifier"
+                dir="ltr"
+                placeholder="نام کاربری یا 09123456789"
                 autoComplete="username"
                 maxLength={200}
                 required
@@ -233,11 +239,14 @@ export default function Login() {
             disabled={
               isLoading || (mode === "sms" && !!challenge && remaining === 0)
             }
-            className={button + " w-full"}
+            className={button + " login-submit"}
+            aria-busy={isLoading}
           >
-            {mode === "sms" && !challenge
+            {isLoading ? <LoaderCircle size={18} className="login-spinner" aria-hidden="true" /> : null}
+            {isLoading ? "در حال بررسی…" : mode === "sms" && !challenge
               ? "دریافت کد ورود"
               : "ورود به فضای کار"}
+            {!isLoading && <ArrowLeft size={18} aria-hidden="true" />}
           </button>
         </form>
         {demo && (
@@ -254,6 +263,7 @@ export default function Login() {
           </div>
         )}
       </Card>
+      <p className="login-footer">همراه فن‌آوا · مدیریت یکپارچه پروژه‌ها و وظایف</p>
     </div>
   );
 }
