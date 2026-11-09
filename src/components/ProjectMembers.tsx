@@ -29,6 +29,7 @@ export default function ProjectMembers({ project }: { project: Project }) {
     draft ?? w.projectMembers?.filter((m) => m.projectId === project.id) ?? [];
   const availableUsers = w.users.filter(
     (u) =>
+      u.assignable !== false &&
       (u.projectCompanies ?? u.companies)?.includes(project.company) &&
       !members.some((m) => m.userId === u.id),
   );
@@ -38,6 +39,7 @@ export default function ProjectMembers({ project }: { project: Project }) {
   const managers = w.users.filter(
     (u) =>
       u.enabled !== false &&
+      (u.assignable !== false || u.id === project.managerId) &&
       (u.projectCompanies ?? u.companies)?.includes(project.company),
   );
   async function assignManager(managerId: number) {

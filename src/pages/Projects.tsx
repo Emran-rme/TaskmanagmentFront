@@ -219,6 +219,8 @@ export default function Projects() {
                     label="مدیر پروژه"
                     name="managerId"
                     users={w.users.filter((u) =>
+                      u.enabled !== false &&
+                      (u.assignable !== false || u.id === editing?.managerId) &&
                       (u.projectCompanies ?? u.companies)?.includes(company),
                     )}
                     defaultValue={editing?.managerId}
