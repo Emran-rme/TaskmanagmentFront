@@ -117,11 +117,6 @@ button, input, select, textarea { font: inherit; }
   background: var(--surface); color: var(--ink); font-size: 15px; box-shadow: none;
 }
 .ui-input:focus { border-color: var(--accent); --tw-ring-color: #5c58ac25; }
-.project-member-role summary { cursor:pointer; }
-.project-member-role-options { margin-top:6px; max-height:260px; overflow-y:auto; padding:6px; border:1px solid var(--line); border-radius:4px; background:var(--surface); color:var(--ink); }
-.project-member-role-options label { display:flex; align-items:center; gap:10px; padding:10px; cursor:pointer; }
-.project-member-role-options label:hover,.project-member-role-options label:focus-within { background:var(--page); }
-.project-member-role-options input { accent-color:var(--accent); flex-shrink:0; }
 .ui-button, .ui-secondary { border-radius:4px; padding: 10px 16px; font-size: 14px; box-shadow: none; backdrop-filter: none; }
 .ui-button { background: var(--accent); border: 1px solid var(--accent); }
 .ui-button:hover { background: #4b478f; }

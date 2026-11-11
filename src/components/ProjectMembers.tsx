@@ -159,52 +159,28 @@ export default function ProjectMembers({ project }: { project: Project }) {
               </span>
             ) : (
               <>
-                <details
-                  className="project-member-role w-full"
-                  onBlur={(e) => {
-                    if (!e.currentTarget.contains(e.relatedTarget as Node))
-                      e.currentTarget.open = false;
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Escape") {
-                      e.preventDefault();
-                      e.currentTarget.open = false;
-                      e.currentTarget.querySelector("summary")?.focus();
-                    }
+                <select
+                  className={`${input} w-full`}
+                  aria-label={`نقش عضو پروژه: ${w.users.find((u) => u.id === member.userId)?.name || member.userId}`}
+                  name={`member-role-${member.userId}`}
+                  value={member.roleId}
+                  required
+                  onChange={(e) => {
+                    const roleId = e.target.value;
+                    setDraft(
+                      members.map((m) =>
+                        m.userId === member.userId ? { ...m, roleId } : m,
+                      ),
+                    );
                   }}
                 >
-                  <summary className={input} aria-label="نقش عضو پروژه">
-                    {roles.find((r) => r.id === member.roleId)?.name ||
-                      "انتخاب نقش"}
-                  </summary>
-                  <fieldset className="project-member-role-options">
-                    <legend className="sr-only">نقش عضو پروژه</legend>
-                    {roles.length === 0 && <p>نقشی تعریف نشده است.</p>}
-                    {roles.map((r) => (
-                      <label key={r.id}>
-                        <input
-                          type="radio"
-                          name={`member-role-${member.userId}`}
-                          value={r.id}
-                          required
-                          checked={member.roleId === r.id}
-                          onChange={() =>
-                            setDraft(
-                              members.map((m, i) =>
-                                i === index ? { ...m, roleId: r.id } : m,
-                              ),
-                            )
-                          }
-                          onInvalid={(e) => {
-                            const details = e.currentTarget.closest("details");
-                            if (details) details.open = true;
-                          }}
-                        />
-                        <span>{r.name}</span>
-                      </label>
-                    ))}
-                  </fieldset>
-                </details>
+                  <option value="">انتخاب نقش</option>
+                  {roles.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.name}
+                    </option>
+                  ))}
+                </select>
                 <button
                   type="button"
                   className={secondary}
