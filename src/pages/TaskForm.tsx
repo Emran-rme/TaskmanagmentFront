@@ -27,6 +27,8 @@ import {
   ErrorBox,
 } from "../components/ui";
 import Modal from "../components/Modal";
+import { TagPicker } from "../components/Tags";
+import { useTagsQuery, useSetTaskTagsMutation } from "../lib/tags";
 import DefinitionPicker from "../components/DefinitionPicker";
 import OrganizationTreeSelect from "../components/OrganizationTreeSelect";
 import PersonPicker from "../components/PersonPicker";
@@ -50,6 +52,16 @@ export default function TaskForm() {
   const { data: w, error: loadError } = useWorkspaceQuery();
   const [mutate, { isLoading }] = useMutateMutation();
   const [error, setError] = useState("");
+  const { data: tagData, isLoading: tagsLoading, isError: tagsError } = useTagsQuery();
+  const [setTaskTags, { isLoading: tagsSaving }] = useSetTaskTagsMutation();
+  const [tagIds, setTagIds] = useState<string[]>([]);
+  const tagsInitialized = useRef(false);
+  useEffect(() => {
+    if (!tagsInitialized.current && tagData) {
+      setTagIds(tagData.taskTags.filter(t => t.taskId === id).map(t => t.tagId));
+      tagsInitialized.current = true;
+    }
+  }, [id, tagData]);
   const contentRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (error) contentRef.current?.scrollTo({ top: 0, behavior: "smooth" });
@@ -153,6 +165,7 @@ export default function TaskForm() {
           onSubmit={async (event) => {
             event.preventDefault();
             setError("");
+            if (tagsLoading || tagsError || tagsSaving) { setError("دریافت یا ذخیره تگ‌ها تکمیل نشده است."); return; }
             const data = new FormData(event.currentTarget);
             const file = data.get("attachment") as File;
             if (file?.size > 20 * 1024 * 1024) {
@@ -186,6 +199,7 @@ export default function TaskForm() {
                   parentTaskId: body.parentTaskId || null,
                 },
               }).unwrap();
+              await setTaskTags({ id: task.id, tagIds }).unwrap();
               if (file?.size) {
                 const upload = new FormData();
                 upload.append("file", file);
@@ -206,6 +220,14 @@ export default function TaskForm() {
               دارند.
             </p>
             {error && <ErrorBox message={error} />}
+            <fieldset className="form-section" disabled={tagsSaving}><legend>برچسب‌ها</legend><TagPicker value={tagIds} onChange={(next) => {
+              const previous = tagIds;
+              setTagIds(next);
+              if (editing) void setTaskTags({ id: editing.id, tagIds: next }).unwrap().catch((err) => {
+                setTagIds(previous);
+                setError(errorText(err));
+              });
+            }} create />{!editing && <p className="text-xs">برچسب‌ها پس از ثبت وظیفه به آن متصل می‌شوند.</p>}</fieldset>
             <fieldset disabled={isLoading} className="form-section">
               <legend>اطلاعات وظیفه</legend>
               <div className="form-grid">

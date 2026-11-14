@@ -70,6 +70,7 @@ export const api = createApi({
   },
   tagTypes: [
     "Workspace",
+    "Tags",
     "ProjectCover",
     "Detail",
     "Notices",

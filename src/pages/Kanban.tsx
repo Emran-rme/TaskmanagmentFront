@@ -1,3 +1,5 @@
+import { TagPicker } from "../components/Tags";
+import { matchesTags, useTagsQuery } from "../lib/tags";
 import { randomUuid } from "../lib/uuid";
 import { useProjectWorkspace } from "../lib/useProjectWorkspace";
 import { useRef, useState } from "react";
@@ -23,6 +25,8 @@ import {
 import Modal from "../components/Modal";
 export default function Kanban() {
   const { projectId } = useParams();
+  const [tagIds, setTagIds] = useState<string[]>([]);
+  const { data: tagData } = useTagsQuery();
   const { data: w, error: loadError } = useProjectWorkspace();
   const { data: custom = [], error: columnError } = useColumnsQuery(
     projectId || "",
@@ -92,6 +96,7 @@ export default function Kanban() {
   }
   return (
     <div className="space-y-5">
+      <div><span className="text-sm">فیلتر برچسب‌ها (همه تگ‌های انتخاب‌شده)</span><TagPicker value={tagIds} onChange={setTagIds} /></div>
       <div className="flex flex-wrap justify-between gap-3">
         <h1 className="text-xl font-bold">برد کانبان</h1>
         {configurable && (
@@ -280,15 +285,15 @@ export default function Kanban() {
             <h2 className="mb-4 flex shrink-0 justify-between text-sm font-bold">
               {column.name}
               <span>
-                {w.tasks.filter((t) => columnFor(t) === column.id).length}
+                {w.tasks.filter((t) => matchesTags(t.id, tagIds, tagData?.taskTags || []) && columnFor(t) === column.id).length}
               </span>
             </h2>
             <div className="min-h-56 flex-1 space-y-3 pb-3" aria-label={"کارت‌های " + column.name}>
-              {!w.tasks.some((t) => columnFor(t) === column.id) && (
+              {!w.tasks.some((t) => matchesTags(t.id, tagIds, tagData?.taskTags || []) && columnFor(t) === column.id) && (
                 <p className="pointer-events-none rounded border border-dashed p-6 text-center text-sm">کارت را اینجا رها کنید</p>
               )}
               {w.tasks
-                .filter((t) => columnFor(t) === column.id)
+                .filter((t) => matchesTags(t.id, tagIds, tagData?.taskTags || []) && columnFor(t) === column.id)
                 .map((task) => (
                   <div
                     key={task.id}

@@ -22,6 +22,7 @@ import { fa, jalali } from "../lib/jalali";
 import { button, secondary, input, ErrorBox } from "./ui";
 import PersonPicker from "./PersonPicker";
 import DeleteButton from "./DeleteButton";
+import { downloadAttachment } from "../lib/attachments";
 
 export const activityDate = (value: string) =>
   new Intl.DateTimeFormat("fa-IR", {
@@ -155,18 +156,9 @@ export default function TaskActivity({
   async function download(file: TaskAttachment) {
     setError("");
     try {
-      const response = await fetch("/api/files/" + file.id, {
-        headers: { authorization: "Bearer " + token },
-      });
-      if (!response.ok) throw new Error("دریافت فایل ناموفق بود.");
-      const url = URL.createObjectURL(await response.blob());
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = file.name;
-      link.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      await downloadAttachment(file, token);
     } catch (error) {
-      setError(errorText(error));
+      setError(error instanceof Error ? error.message : errorText(error));
     }
   }
   function fileLink(file: TaskAttachment) {

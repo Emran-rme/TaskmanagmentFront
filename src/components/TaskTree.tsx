@@ -1,3 +1,4 @@
+import { TagBadges } from "./Tags";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState, can, manages } from "../store";
@@ -34,6 +35,7 @@ export default function TaskTree({
                   {t.code} · {assignedNames(t, users) || "مسئول ثبت‌شده"}
                 </span>
               </Link>
+              <TagBadges taskId={t.id} />
               <Badge status={t.status} />
               {t.status !== "بسته شده" &&
                 can(actor, "tasks.write", t.company) &&

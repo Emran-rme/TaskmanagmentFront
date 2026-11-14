@@ -477,6 +477,28 @@ button, input, select, textarea, option, optgroup {
 .task-status-options button:not([aria-pressed=true]):disabled {opacity:.55;}
 .task-progress-summary {border-block:1px solid var(--line);padding:22px 0;margin:23px 0;display:grid;gap:13px;font-size:13px;}
 .task-detail-field {margin-block:23px;}
+.task-attachments {margin-block:24px;}
+.task-attachments-heading {display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;}
+.task-attachments-heading h3 {display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;}
+.task-attachments-heading h3 svg {color:var(--accent);}
+.task-attachments-heading>span {font-size:11px;color:var(--muted);}
+.task-attachments-list {display:grid;gap:8px;}
+.task-attachment {display:flex;align-items:center;gap:10px;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;background:var(--surface);}
+.task-attachment-icon {display:grid;place-items:center;flex:none;width:38px;height:38px;border-radius:8px;background:#5c58ac12;color:var(--accent);}
+.task-attachment-info {display:grid;gap:3px;min-width:0;flex:1;}
+.task-attachment-info strong {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:600;unicode-bidi:plaintext;}
+.task-attachment-info span {font-size:10px;color:var(--muted);line-height:1.8;}
+.task-attachment-actions {display:flex;flex:none;gap:3px;}
+.task-attachment-actions button {display:grid;place-items:center;width:34px;height:34px;border-radius:7px;color:var(--muted);}
+.task-attachment-actions button:hover {background:#5c58ac12;color:var(--accent);}
+.task-attachment-actions button:focus-visible {outline:2px solid var(--accent);outline-offset:2px;}
+.task-attachment-actions button:disabled {opacity:.45;cursor:wait;}
+.task-attachments-empty {border:1px dashed var(--line);border-radius:9px;padding:15px;color:var(--muted);font-size:12px;}
+.task-attachments-error {margin-bottom:8px;color:#dc4556;font-size:12px;}
+.attachment-preview-dialog {width:min(1000px,calc(100vw - 32px));}
+.attachment-preview-dialog>.app-modal-body {display:grid;place-items:center;min-height:180px;max-height:75dvh;overflow:auto;}
+.attachment-preview-frame {width:100%;height:70dvh;border:0;background:white;}
+.attachment-preview-image {max-width:100%;max-height:70dvh;object-fit:contain;}
 .task-detail-field h3,.task-detail-facts h3 {font-size:12px;font-weight:600;margin-bottom:10px;}
 .task-detail-value {display:flex;align-items:center;flex-wrap:wrap;gap:8px;min-height:42px;border:1px solid var(--line);padding:8px 10px;border-radius:4px;font-size:13px;}
 .task-detail-facts {display:grid;grid-template-columns:1fr 1fr;gap:22px 15px;padding-block:22px;border-block:1px solid var(--line);font-size:12px;line-height:1.9;}

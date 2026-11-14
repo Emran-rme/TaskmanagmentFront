@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import {
@@ -8,9 +8,13 @@ import {
   Search,
   Clock3,
   FolderKanban,
+  X,
 } from "lucide-react";
-import { RootState, useMyWorkQuery } from "../store";
+import { RootState, can, useMyWorkQuery } from "../store";
 import { ErrorBox, Loading, input, secondary } from "../components/ui";
+import { TagBadge } from "../components/Tags";
+import { useTagsQuery, type Tag } from "../lib/tags";
+import { indexWorkTags, normalizeWorkSearch, workItemMatches, workItemTaskId } from "../lib/myWorkSearch";
 import { errorText } from "../store";
 import { fa, jalali } from "../lib/jalali";
 
@@ -35,9 +39,26 @@ export default function MyWork() {
     pollingInterval: 60000,
     refetchOnFocus: true,
   });
+  const { data: tagData } = useTagsQuery(undefined, { skip: !can(user, "tasks.read"), refetchOnFocus: true });
   const [tab, setTab] = useState("all");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const [activeSuggestion, setActiveSuggestion] = useState(0);
+  const searchId = useId();
+  const listId = useId();
+  const searchInput = useRef<HTMLInputElement>(null);
+  const tagIndex = useMemo(() => indexWorkTags(data?.items || [], tagData), [data?.items, tagData]);
+  const suggestions = tagIndex.suggestions.filter(tag => normalizeWorkSearch(tag.name).includes(normalizeWorkSearch(search))).slice(0, 8);
+  const selectedTag = tagData?.tags.find(tag => tag.id === selectedTagId);
+  const selectTag = (tag: Tag) => {
+    setSelectedTagId(tag.id);
+    setSearch("");
+    setPage(1);
+    setSuggestionsOpen(false);
+    searchInput.current?.focus();
+  };
   if (error) return <ErrorBox message={errorText(error)} />;
   if (!data) return <Loading />;
   const reviews = data.items.filter((i) =>
@@ -54,9 +75,7 @@ export default function MyWork() {
           item.actionable &&
           !!item.due &&
           item.due < data.today)) &&
-      `${item.title} ${item.code} ${item.projectName} ${item.company}`
-        .toLocaleLowerCase()
-        .includes(search.trim().toLocaleLowerCase()),
+      workItemMatches(item, search, selectedTagId, tagIndex.byTask),
   );
   const pages = Math.max(1, Math.ceil(filtered.length / 20));
   const current = Math.min(page, pages);
@@ -111,7 +130,7 @@ export default function MyWork() {
           })}
         </div>
       </section>
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+      <section className="rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 p-4 dark:border-slate-700">
           <div className="flex flex-wrap gap-2" aria-label="فیلتر کارهای من">
             {tabs.map(([key, label]) => (
@@ -129,22 +148,63 @@ export default function MyWork() {
               </button>
             ))}
           </div>
-          <label className="relative min-w-56">
-            <span className="sr-only">جست‌وجوی کارهای من</span>
+          <div className="relative min-w-56" onBlur={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget)) setSuggestionsOpen(false);
+          }}>
+            <label htmlFor={searchId} className="sr-only">جست‌وجوی کارهای من</label>
             <Search
               className="absolute right-3 top-3 text-slate-400"
               size={16}
             />
             <input
+              id={searchId}
+              ref={searchInput}
               className={`${input} pr-10`}
-              placeholder="جست‌وجوی عنوان یا پروژه…"
+              placeholder="جست‌وجوی عنوان، پروژه یا تگ…"
               value={search}
+              role="combobox"
+              aria-autocomplete="list"
+              aria-expanded={suggestionsOpen && suggestions.length > 0}
+              aria-controls={listId}
+              aria-activedescendant={suggestionsOpen && suggestions.length ? `${listId}-${Math.min(activeSuggestion, suggestions.length - 1)}` : undefined}
+              onFocus={() => { setSuggestionsOpen(true); setActiveSuggestion(0); }}
               onChange={(e) => {
                 setSearch(e.target.value);
                 setPage(1);
+                setSuggestionsOpen(true);
+                setActiveSuggestion(0);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") { setSuggestionsOpen(false); return; }
+                if (!suggestions.length) return;
+                if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+                  event.preventDefault();
+                  setSuggestionsOpen(true);
+                  setActiveSuggestion(current => (current + (event.key === "ArrowDown" ? 1 : -1) + suggestions.length) % suggestions.length);
+                } else if (event.key === "Enter" && suggestionsOpen) {
+                  event.preventDefault();
+                  selectTag(suggestions[Math.min(activeSuggestion, suggestions.length - 1)]);
+                }
               }}
             />
-          </label>
+            {suggestionsOpen && suggestions.length > 0 && (
+              <div id={listId} role="listbox" aria-label="تگ‌های پیشنهادی" className="absolute right-0 top-full z-20 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-800">
+                {suggestions.map((tag, index) => (
+                  <button key={tag.id} id={`${listId}-${index}`} type="button" role="option" aria-selected={index === activeSuggestion}
+                    onMouseDown={event => event.preventDefault()} onMouseEnter={() => setActiveSuggestion(index)} onClick={() => selectTag(tag)}
+                    className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-right text-sm ${index === activeSuggestion ? "bg-slate-100 dark:bg-slate-700" : "hover:bg-slate-50 dark:hover:bg-slate-700"}`}>
+                    <span className="h-3 w-3 shrink-0 rounded-full border border-black/10" style={{ backgroundColor: tag.color }} aria-hidden="true" />
+                    <span className="min-w-0 flex-1 truncate">{tag.name}</span><span className="text-xs text-slate-400">تگ</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          {selectedTagId && <div className="flex w-full items-center gap-2 text-xs text-slate-500">فیلتر تگ:
+            <button type="button" onClick={() => { setSelectedTagId(null); setPage(1); }} aria-label={`حذف فیلتر ${selectedTag?.name || "تگ"}`} className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200">
+              {selectedTag?.name || "تگ انتخاب‌شده"}<X size={13} aria-hidden="true" />
+            </button>
+          </div>}
         </div>
         <div aria-live="polite" className="px-4 pt-3 text-xs text-slate-500">
           {fa(filtered.length)} مورد {isFetching && "· در حال به‌روزرسانی…"}
@@ -187,6 +247,11 @@ export default function MyWork() {
                     )}
                   </div>
                   <h2 className="font-semibold">{item.title}</h2>
+                  {(() => {
+                    const taskId = workItemTaskId(item);
+                    const tags = taskId ? tagIndex.byTask.get(taskId) : undefined;
+                    return tags?.length ? <div className="mt-2 flex flex-wrap gap-1">{tags.map(tag => <TagBadge key={tag.id} tag={tag} />)}</div> : null;
+                  })()}
                   <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
                     {item.projectName}
                     {item.company && ` · ${item.company}`}

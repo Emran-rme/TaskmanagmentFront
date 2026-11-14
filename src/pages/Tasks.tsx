@@ -1,3 +1,5 @@
+import { TagBadges, TagPicker } from "../components/Tags";
+import { matchesTags, useTagsQuery } from "../lib/tags";
 import { useSelector } from "react-redux";
 import { RootState, can, canEditTask } from "../store";
 import TaskTree from "../components/TaskTree";
@@ -20,6 +22,8 @@ import { jalali, fa } from "../lib/jalali";
 import { Task, assignedIds, assignedNames } from "../lib/types";
 export default function Tasks() {
   const { projectId } = useParams();
+  const [tagIds, setTagIds] = useState<string[]>([]);
+  const { data: tagData } = useTagsQuery();
   const actor = useSelector((s: RootState) => s.auth.user);
   const { data: w } = useProjectWorkspace();
   const [view, setView] = useState<"tree" | "table">("tree");
@@ -43,6 +47,7 @@ export default function Tasks() {
   const rows = w.tasks
     .filter(
       (t) =>
+        matchesTags(t.id, tagIds, tagData?.taskTags || []) &&
         (!status || t.status === status) &&
         (!priority || t.priority === priority) &&
         (!project || t.projectId === project) &&
@@ -114,6 +119,7 @@ export default function Tasks() {
   }
   return (
     <div className="space-y-5">
+      <div><span className="text-sm">فیلتر برچسب‌ها (همه تگ‌های انتخاب‌شده)</span><TagPicker value={tagIds} onChange={setTagIds} /></div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-navy dark:text-sky-50">
@@ -263,7 +269,7 @@ export default function Tasks() {
                       {t.code}
                     </td>
                     <td className="max-w-64 p-3 font-bold text-navy dark:text-sky-50">
-                      <Link to={"/tasks/" + t.id}>{t.title}</Link>
+                      <Link to={"/tasks/" + t.id}>{t.title}</Link><TagBadges taskId={t.id} />
                       <p className="mt-2 text-[10px] font-normal text-slate-400">
                         {t.company} · {t.unit}
                       </p>

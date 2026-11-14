@@ -2,6 +2,7 @@ import TaskTree from "../components/TaskTree";
 import TaskWorkflowPanel from "../components/TaskWorkflowPanel";
 import PersonPicker from "../components/PersonPicker";
 import TaskActivity, { activityDate } from "../components/TaskActivity";
+import TaskAttachments from "../components/TaskAttachments";
 import DeleteButton from "../components/DeleteButton";
 import Modal from "../components/Modal";
 import Tasks from "./Tasks";
@@ -259,6 +260,7 @@ export default function TaskDetail() {
                 {task.description || "توضیحی ثبت نشده است."}
               </p>
             </div>
+            <TaskAttachments key={task.id} attachments={d.attachments || []} users={w.users} />
             {task.expectedOutput && (
               <div className="task-detail-field">
                 <h3>خروجی مورد انتظار</h3>

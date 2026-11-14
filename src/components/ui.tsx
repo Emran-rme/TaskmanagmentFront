@@ -1,3 +1,4 @@
+import { TagBadges } from "./Tags";
 import {
   useId,
   useEffect,
@@ -120,6 +121,7 @@ export function TaskCard({ task, draggable }: { task: Task; draggable?: boolean 
         <Badge status={task.status} />
       </div>
       <h3 className="text-sm font-bold leading-7">{task.title}</h3>
+      <TagBadges taskId={task.id} />
       <Progress value={task.progress} />
       <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
         <span>{task.company}</span>
