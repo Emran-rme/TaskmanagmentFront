@@ -130,8 +130,8 @@ export default function MyWork() {
           })}
         </div>
       </section>
-      <section className="rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 p-4 dark:border-slate-700">
+      <section className="mywork-list rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+        <div className="mywork-toolbar flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 p-4 dark:border-slate-700">
           <div className="flex flex-wrap gap-2" aria-label="فیلتر کارهای من">
             {tabs.map(([key, label]) => (
               <button
@@ -224,7 +224,7 @@ export default function MyWork() {
               <Link
                 key={item.key}
                 to={item.href}
-                className="flex flex-wrap items-center gap-4 p-5 transition hover:bg-sky-50/60 focus-visible:outline focus-visible:outline-sky-500 dark:hover:bg-slate-800"
+                className="mywork-row flex flex-wrap items-center gap-4 p-5 transition hover:bg-sky-50/60 focus-visible:outline focus-visible:outline-sky-500 dark:hover:bg-slate-800"
               >
                 <span className="rounded-xl bg-slate-100 p-3 text-sky-600 dark:bg-slate-800">
                   {["approval", "extension"].includes(item.kind) ? (

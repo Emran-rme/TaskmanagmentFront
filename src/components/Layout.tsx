@@ -17,11 +17,13 @@ import {
   Settings,
   Plus,
   RefreshCw,
+  PanelRightClose,
+  PanelRightOpen,
 } from "lucide-react";
 import { RootState, signedOut, api, can, useMutateMutation } from "../store";
 import HeaderMenu from "./HeaderMenu";
 import NotificationListener from "./NotificationListener";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { APP_NAME, BRAND_ICON } from "../lib/branding";
 import {
   canVisit,
@@ -38,11 +40,18 @@ const nav = [
   ["/master", "اطلاعات پایه", Grid2X2, "management"],
 ] as const;
 export default function Layout() {
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try { return localStorage.getItem("tm-sidebar-collapsed") === "true"; }
+    catch { return false; }
+  });
   const user = useSelector((s: RootState) => s.auth.user);
   const dispatch = useDispatch(),
     navigate = useNavigate(),
     location = useLocation();
   const [mutate] = useMutateMutation();
+  useEffect(() => {
+    try { localStorage.setItem("tm-sidebar-collapsed", String(sidebarCollapsed)); } catch { /* Keep the session setting. */ }
+  }, [sidebarCollapsed]);
   useEffect(() => {
     if (!/^\/tasks\/(new|[^/]+)(\/edit)?\/?$/.test(location.pathname))
       sessionStorage.setItem(
@@ -97,7 +106,7 @@ export default function Layout() {
     navigate("/login");
   }
   return (
-    <div className="app-shell reference-shell min-h-screen font-sans" dir="rtl">
+    <div className={`app-shell reference-shell min-h-screen font-sans${sidebarCollapsed ? " sidebar-collapsed" : ""}`} dir="rtl">
       <NotificationListener />
       <aside className="reference-sidebar" aria-label="منوی اصلی">
         <Link to="/" className="reference-brand">
@@ -107,7 +116,7 @@ export default function Layout() {
             <small>مدیریت وظایف و پروژه‌ها</small>
           </span>
         </Link>
-        <nav aria-label="بخش‌های سامانه">
+        <nav id="main-navigation" aria-label="بخش‌های سامانه">
           {visibleNav.map(([path, label, Icon, group], index) => (
             <Fragment key={path}>
               {index > 0 && group !== visibleNav[index - 1][3] && (
@@ -117,7 +126,7 @@ export default function Layout() {
                   className="reference-nav-separator"
                 />
               )}
-              <NavLink to={path} end={path === "/"}>
+              <NavLink to={path} end={path === "/"} title={sidebarCollapsed ? label : undefined} aria-label={label}>
                 <Icon size={19} strokeWidth={1.6} />
                 <span>{label}</span>
               </NavLink>
@@ -132,11 +141,16 @@ export default function Layout() {
       </aside>
       <header className="reference-header">
         <div className="reference-header-main">
-          <div>
+          <div className="reference-heading">
+            <button type="button" className="sidebar-toggle" aria-label={sidebarCollapsed ? "باز کردن نوار کناری" : "جمع کردن نوار کناری"} title={sidebarCollapsed ? "باز کردن نوار کناری" : "جمع کردن نوار کناری"} aria-expanded={!sidebarCollapsed} aria-controls="main-navigation" onClick={() => setSidebarCollapsed((value) => !value)}>
+              {sidebarCollapsed ? <PanelRightOpen size={19} /> : <PanelRightClose size={19} />}
+            </button>
+            <div>
             <p className="reference-crumb">
               {APP_NAME} <span>/</span> {title}
             </p>
             <h2>{title}</h2>
+            </div>
           </div>
           <div className="reference-profile">
             <div className="reference-role">

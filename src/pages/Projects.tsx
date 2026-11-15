@@ -6,10 +6,10 @@ import PersonPicker from "../components/PersonPicker";
 import OrganizationTreeSelect from "../components/OrganizationTreeSelect";
 import { useSelector } from "react-redux";
 import { RootState, can, canProject, canManageProject } from "../store";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, type CSSProperties } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import DeleteButton from "../components/DeleteButton";
-import { Pencil } from "lucide-react";
+import { Pencil, LayoutGrid, List } from "lucide-react";
 import { useWorkspaceQuery, useMutateMutation, errorText } from "../store";
 import {
   Card,
@@ -26,6 +26,13 @@ import { iso, jalali, fa } from "../lib/jalali";
 import { defaultRequestSources } from "../lib/types";
 import type { Project } from "../lib/types";
 export default function Projects() {
+  const [view, setView] = useState<"grid" | "list">(() => {
+    try { return localStorage.getItem("tm-projects-view") === "list" ? "list" : "grid"; } catch { return "grid"; }
+  });
+  const [columns, setColumns] = useState(() => {
+    try { const n = Number(localStorage.getItem("tm-projects-columns")); return n >= 1 && n <= 4 && Number.isInteger(n) ? n : 3; } catch { return 3; }
+  });
+  useEffect(() => { try { localStorage.setItem("tm-projects-view", view); localStorage.setItem("tm-projects-columns", String(columns)); } catch { /* Keep the session setting. */ } }, [view, columns]);
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedDate = searchParams.get("date") || iso(new Date());
   const actor = useSelector((s: RootState) => s.auth.user);
@@ -87,7 +94,7 @@ export default function Projects() {
     .map((node) => node.id);
 
   return (
-    <div className="space-y-5">
+    <div className="projects-page space-y-5">
       <div className="flex justify-between">
         <h1 className="text-xl font-bold text-navy dark:text-sky-50">
           پروژه‌ها
@@ -370,7 +377,14 @@ export default function Projects() {
         !w.projects.some(
           (p) => p.start.slice(0, 10) === searchParams.get("activeOn")!,
         ) && <p>در این تاریخ پروژه‌ای در محدوده دسترسی شما وجود ندارد.</p>}
-      <div className="projects-grid">
+      <div className="projects-view-toolbar">
+        <div className="projects-view-switch" role="group" aria-label="نمایش پروژه‌ها">
+          <button type="button" aria-pressed={view === "grid"} onClick={() => setView("grid")}><LayoutGrid size={16} /> شبکه‌ای</button>
+          <button type="button" aria-pressed={view === "list"} onClick={() => setView("list")}><List size={16} /> فهرستی</button>
+        </div>
+        {view === "grid" && <label className="projects-columns">تعداد ستون <select value={columns} onChange={(event) => setColumns(Number(event.target.value))} aria-label="تعداد ستون پروژه‌ها">{[1, 2, 3, 4].map(n => <option key={n} value={n}>{fa(n)}</option>)}</select></label>}
+      </div>
+      <div className={`projects-grid ${view === "list" ? "is-list" : "is-grid"}`} style={{ "--project-columns": columns } as CSSProperties}>
         {w.projects
           .filter(
             (p) =>

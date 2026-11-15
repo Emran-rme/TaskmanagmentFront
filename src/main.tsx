@@ -12,6 +12,7 @@ import { store, RootState } from "./store";
 import Layout from "./components/Layout";
 import { Loading } from "./components/ui";
 import "./index.css";
+import "./corporate.css";
 import { safeReturnTo, authDestination } from "./lib/returnTo";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
