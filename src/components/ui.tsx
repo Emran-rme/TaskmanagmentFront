@@ -132,8 +132,16 @@ export function TaskCard({ task, draggable }: { task: Task; draggable?: boolean 
 }
 export function Loading() {
   return (
-    <div className="rounded-xl bg-white dark:bg-slate-800 p-8 text-center text-slate-500 dark:text-slate-400">
-      در حال دریافت اطلاعات…
+    <div className="loading-placeholder" role="status" aria-live="polite" aria-label="در حال دریافت اطلاعات">
+      <div className="loading-skeleton" aria-hidden="true">
+        <span className="loading-skeleton-heading" />
+        <span className="loading-skeleton-line" />
+        <span className="loading-skeleton-line" />
+        <span className="loading-skeleton-line" />
+      </div>
+      <div className="loading-veil">
+        <div className="loading-indicator"><span className="loading-spinner" aria-hidden="true" />در حال دریافت اطلاعات…</div>
+      </div>
     </div>
   );
 }

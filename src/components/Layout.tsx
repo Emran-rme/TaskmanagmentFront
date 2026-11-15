@@ -10,10 +10,12 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import {
   LayoutDashboard,
-  ListTodo,
+  ClipboardList,
+  CalendarCheck2,
   Bell,
   FolderKanban,
-  Grid2X2,
+  Workflow,
+  Database,
   Settings,
   Plus,
   RefreshCw,
@@ -33,11 +35,11 @@ import {
 const nav = [
   ["/", "میز کار", LayoutDashboard, "work"],
   ["/projects", "پروژه‌ها", FolderKanban, "work"],
-  ["/tasks", "وظایف", ListTodo, "work"],
-  ["/todos", "کارهای روزانه", ListTodo, "work"],
+  ["/tasks", "وظایف", ClipboardList, "work"],
+  ["/todos", "کارهای روزانه", CalendarCheck2, "work"],
   ["/notifications", "اعلان‌ها", Bell, "work"],
-  ["/workflows", "گردش‌کارها", Grid2X2, "management"],
-  ["/master", "اطلاعات پایه", Grid2X2, "management"],
+  ["/workflows", "گردش‌کارها", Workflow, "management"],
+  ["/master", "اطلاعات پایه", Database, "management"],
 ] as const;
 export default function Layout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {

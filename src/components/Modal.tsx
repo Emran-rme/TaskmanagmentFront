@@ -36,6 +36,7 @@ export default function Modal({
       ref={dialog}
       dir="rtl"
       aria-labelledby={titleId}
+      aria-busy={busy}
       className={
         "app-modal" + (compact ? " app-modal-compact" : "") + " " + className
       }
@@ -68,6 +69,7 @@ export default function Modal({
         </button>
       </div>
       <div className="app-modal-body">{children}</div>
+      {busy && <div className="modal-loading-veil" role="status" aria-live="polite"><div className="loading-indicator"><span className="loading-spinner" aria-hidden="true" />در حال پردازش…</div></div>}
     </dialog>,
     document.body,
   );
