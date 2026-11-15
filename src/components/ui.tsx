@@ -130,9 +130,9 @@ export function TaskCard({ task, draggable }: { task: Task; draggable?: boolean 
     </Link>
   );
 }
-export function Loading() {
+export function Loading({ fullScreen = false }: { fullScreen?: boolean }) {
   return (
-    <div className="loading-placeholder" role="status" aria-live="polite" aria-label="در حال دریافت اطلاعات">
+    <div className={`loading-placeholder${fullScreen ? " loading-placeholder--screen" : ""}`} role="status" aria-live="polite" aria-label="در حال دریافت اطلاعات">
       <div className="loading-skeleton" aria-hidden="true">
         <span className="loading-skeleton-heading" />
         <span className="loading-skeleton-line" />

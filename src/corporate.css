@@ -157,6 +157,10 @@
 
 /* Loading feedback retains the page structure and announces progress. */
 .loading-placeholder { position:relative; min-width:0; overflow:hidden; border:1px solid var(--line); border-radius:8px; background:var(--surface); }
+.loading-placeholder--screen { min-height:100vh; min-height:100dvh; display:grid; place-items:center; border:0; border-radius:0; background:var(--page); }
+.loading-placeholder--screen .loading-skeleton { width:min(420px, calc(100vw - 40px)); border:1px solid var(--line); border-radius:8px; background:var(--surface); }
+.app-content > .loading-placeholder { min-height:55vh; display:grid; place-items:center; }
+.app-content > .loading-placeholder .loading-skeleton { width:min(420px, 100%); }
 .loading-skeleton { display:grid; gap:12px; padding:24px; }
 .loading-skeleton span { display:block; height:14px; border-radius:5px; background:var(--line); animation:loading-pulse 1.5s ease-in-out infinite; }
 .loading-skeleton-heading { width:32%; max-width:200px; margin-bottom:8px; }

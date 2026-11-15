@@ -63,7 +63,7 @@ function ContextRoute() {
 }
 function App() {
   return (
-    <Suspense fallback={<Loading />}>
+    <Suspense fallback={<Loading fullScreen />}>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="select-context" element={<ContextRoute />} />
