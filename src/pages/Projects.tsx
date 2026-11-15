@@ -207,6 +207,7 @@ export default function Projects() {
                     defaultValue={
                       company === editing?.company ? editing.unit : ""
                     }
+                    preserveDefault={!!editing}
                     disabled={!company}
                   />
                 </div>
@@ -369,7 +370,7 @@ export default function Projects() {
         !w.projects.some(
           (p) => p.start.slice(0, 10) === searchParams.get("activeOn")!,
         ) && <p>در این تاریخ پروژه‌ای در محدوده دسترسی شما وجود ندارد.</p>}
-      <div className="grid items-start gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="projects-grid">
         {w.projects
           .filter(
             (p) =>
@@ -379,9 +380,10 @@ export default function Projects() {
           .map((p) => (
             <Card
               key={p.id}
+              className="project-list-card"
               title={p.name}
               action={
-                <div className="flex items-center gap-1">
+                <div className="flex shrink-0 items-center gap-1">
                   {canManageProject(actor, p, w) && (
                     <button
                       type="button"
@@ -406,7 +408,7 @@ export default function Projects() {
                 </div>
               }
             >
-              <div className="relative mb-5 overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-400 via-brand to-blue-700">
+              <div className="project-list-cover relative overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-400 via-brand to-blue-700">
                 <ProjectCover project={p}>
                   <svg
                     className="h-36 w-full"
@@ -439,14 +441,14 @@ export default function Projects() {
                   {p.company}
                 </div>
               </div>
-              <div className="space-y-3 text-xs text-slate-500 dark:text-slate-400">
-                <p>{p.status}</p>
-                <p>مدیر: {w.users.find((u) => u.id === p.managerId)?.name}</p>
-                <p>حامی: {p.sponsor}</p>
-                <p>
+              <div className="project-list-details text-xs text-slate-500 dark:text-slate-400">
+                <p className="project-list-status">{p.status}</p>
+                <p className="project-list-single" title={w.users.find((u) => u.id === p.managerId)?.name}>مدیر: {w.users.find((u) => u.id === p.managerId)?.name || "—"}</p>
+                <p className="project-list-single" title={p.sponsor}>حامی: {p.sponsor || "—"}</p>
+                <p className="project-list-description" title={[p.unit, p.description].filter(Boolean).join(" · ")}>
                   {p.unit} · {p.description}
                 </p>
-                <p>
+                <p className="project-list-single">
                   {jalali(p.start)} تا {jalali(p.end)}
                 </p>
                 <Progress
@@ -457,7 +459,7 @@ export default function Projects() {
                       (w.tasks.filter((t) => t.projectId === p.id).length || 1),
                   )}
                 />
-                <div className="flex flex-wrap gap-2">
+                <div className="project-list-actions">
                   <Link className={secondary} to={`/projects/${p.id}`}>
                     ورود به فضای پروژه
                   </Link>
@@ -471,8 +473,8 @@ export default function Projects() {
                       </Link>
                     )}
                 </div>
-                <p>بودجه: {p.budget.toLocaleString("fa-IR")} ریال</p>
-                <p className="border-t pt-3 text-brand dark:text-sky-300">
+                <p className="project-list-single">بودجه: {p.budget.toLocaleString("fa-IR")} ریال</p>
+                <p className="project-list-count text-brand dark:text-sky-300">
                   {fa(w.tasks.filter((t) => t.projectId === p.id).length)} وظیفه
                 </p>
               </div>

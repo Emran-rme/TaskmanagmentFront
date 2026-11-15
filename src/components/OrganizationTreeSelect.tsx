@@ -20,6 +20,7 @@ export default function OrganizationTreeSelect({
   onChange,
   disabled = false,
   valueKey = "name",
+  preserveDefault = false,
 }: {
   nodes: Unit[];
   allowedIds: string[];
@@ -30,6 +31,7 @@ export default function OrganizationTreeSelect({
   onChange?: (value: string) => void;
   disabled?: boolean;
   valueKey?: "name" | "id";
+  preserveDefault?: boolean;
 }) {
   const [selection, setSelection] = useState(defaultValue);
   const [open, setOpen] = useState(false);
@@ -38,6 +40,7 @@ export default function OrganizationTreeSelect({
   const selected = nodes.find(
     (node) => allowed.has(node.id) && node[valueKey] === (value ?? selection),
   );
+  const preserved = preserveDefault && value === undefined && selection === defaultValue ? defaultValue : "";
   const byId = new Map(nodes.map((node) => [node.id, node]));
   const visible = new Set<string>();
   for (const nodeId of allowed) {
@@ -54,7 +57,7 @@ export default function OrganizationTreeSelect({
       <span id={id + "-label"} className="block text-xs font-bold">
         {label}
       </span>
-      <input type="hidden" name={name} value={selected?.[valueKey] || ""} />
+      <input type="hidden" name={name} value={selected?.[valueKey] || preserved} />
       <button
         type="button"
         className={
@@ -67,7 +70,7 @@ export default function OrganizationTreeSelect({
         disabled={disabled}
         onClick={() => setOpen(!open)}
       >
-        <span className="truncate">{selected?.name || "انتخاب " + label}</span>
+        <span className="truncate">{selected?.name || preserved || "انتخاب " + label}</span>
         <ChevronDown
           size={16}
           className={

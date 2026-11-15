@@ -283,6 +283,7 @@ export default function TaskForm() {
                         defaultValue={editing?.unit || ""}
                       >
                         <option value="">انتخاب واحد</option>
+                        {!!editing?.unit && !w.units.includes(editing.unit) && <option value={editing.unit}>{editing.unit}</option>}
                         {w.units
                           .filter((u) => {
                             const nodes = w.organization || [];

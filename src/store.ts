@@ -6,6 +6,7 @@ import type { IntegrationResponse } from "./lib/integrations";
 import type { ModulesResponse } from "./lib/modules";
 import { notifyError } from "./lib/toasts";
 import type { FlowCatalog, TaskFlow } from "./lib/workflows";
+export type TodoList = { id: string; name: string; icon: string; color: string };
 export interface DeletedRecord {
   entity: string;
   id: string;
@@ -107,6 +108,8 @@ export const api = createApi({
         title: string;
         done: boolean;
         archived: boolean;
+        listId: string | null;
+        priority: number;
         reminderAt?: string;
       }[],
       void
@@ -114,6 +117,7 @@ export const api = createApi({
       query: () => "todos",
       providesTags: ["Workspace"],
     }),
+    todoLists: b.query<TodoList[], void>({ query: () => "todo-lists", providesTags: ["Workspace"] }),
     master: b.query<any, void>({
       query: () => "master",
       providesTags: ["Master"],
@@ -207,6 +211,7 @@ export const {
   useProjectRolesQuery,
   useColumnsQuery,
   useTodosQuery,
+  useTodoListsQuery,
   useMasterQuery,
   useContextsQuery,
   useTrashQuery,

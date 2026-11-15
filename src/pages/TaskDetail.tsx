@@ -7,7 +7,7 @@ import DeleteButton from "../components/DeleteButton";
 import Modal from "../components/Modal";
 import Tasks from "./Tasks";
 import { useTaskReturnPath } from "../lib/taskNavigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import {
@@ -44,20 +44,38 @@ import {
 import JalaliDatePicker from "../components/JalaliDatePicker";
 import { jalali, iso, parse, fa } from "../lib/jalali";
 import { Task, assignedIds, statuses } from "../lib/types";
+import { rejectionRequest, shouldReviewDelivery } from "../lib/deliveryReview";
 export default function TaskDetail() {
   const { id = "" } = useParams();
   const { data: d, error: detailError } = useDetailQuery(id);
-  const { data: taskFlow } = useTaskFlowQuery(id);
+  const { currentData: taskFlow, isSuccess: flowLoaded } = useTaskFlowQuery(id);
   const { data: w } = useWorkspaceQuery();
   const [mutate, { isLoading }] = useMutateMutation();
   const [tab, T] = useState("progress");
   const [error, E] = useState("");
   const [success, S] = useState("");
   const [operationsOpen, setOperationsOpen] = useState(false);
+  const [reviewDecision, setReviewDecision] = useState<"approve" | "reject">("approve");
   const operationsRef = useRef<HTMLDivElement>(null);
+  const openedReview = useRef("");
   const { user } = useSelector((s: RootState) => s.auth);
   const navigate = useNavigate();
   const returnTo = useTaskReturnPath();
+  const reviewReady = !!d && !!w && d.task.id === id &&
+    shouldReviewDelivery(d.task.status, canCloseTask(user, d.task, w), taskFlow, flowLoaded);
+  useEffect(() => {
+    if (!reviewReady) {
+      openedReview.current = "";
+      return;
+    }
+    if (openedReview.current === id) return;
+    openedReview.current = id;
+    setReviewDecision("approve");
+    T("delivery");
+    setOperationsOpen(true);
+    const frame = requestAnimationFrame(() => operationsRef.current?.scrollIntoView({ block: "start" }));
+    return () => cancelAnimationFrame(frame);
+  }, [id, reviewReady]);
   if (detailError) return <ErrorBox message={errorText(detailError)} />;
   if (!d || !w) return <Loading />;
   const task = d.task as Task;
@@ -68,6 +86,7 @@ export default function TaskDetail() {
   const managed = taskFlow?.enabled && taskFlow.status === "Waiting";
   const workStage = !managed || taskFlow.stage === "work";
   const reviewStage = managed && taskFlow.stage === "approval";
+  const deliveryReview = reviewReady;
   const operationAllowed =
     tab === "progress"
       ? workStage
@@ -343,11 +362,18 @@ export default function TaskDetail() {
                           body.append("file", file);
                           await send("tasks/" + id + "/files", body);
                         }
+                      } else if (deliveryReview && reviewDecision === "reject") {
+                        if (!String(v.reason || "").trim()) {
+                          E("علت عدم تأیید الزامی است.");
+                          return;
+                        }
+                        const request = rejectionRequest(id, !!reviewStage, String(v.reason), task.progress, task.version);
+                        await send(request.url, request.body);
                       } else
                         await send("tasks/" + id + "/deliver", {
                           output: v.output,
                           quality: +String(v.quality),
-                          accept: reviewStage || v.accept === "on",
+                          accept: deliveryReview || v.accept === "on",
                           version: task.version,
                         });
                     }}
@@ -439,11 +465,13 @@ export default function TaskDetail() {
                       </>
                     ) : tab === "delivery" ? (
                       <>
+                        {deliveryReview && <h3 className="md:col-span-2">فرم ارزیابی تحویل</h3>}
                         <Field label="خروجی نهایی">
                           <textarea
                             className={input}
                             name="output"
-                            required
+                            required={!deliveryReview || reviewDecision === "approve"}
+                            readOnly={deliveryReview && !!task.deliveredOutput}
                             defaultValue={task.deliveredOutput}
                             rows={4}
                           />
@@ -461,16 +489,25 @@ export default function TaskDetail() {
                             ))}
                           </select>
                         </Field>
-                        {reviewer && (!managed || reviewStage) && (
+                        {deliveryReview ? (
+                          <fieldset className="md:col-span-2 flex flex-wrap gap-4">
+                            <legend>نتیجه ارزیابی</legend>
+                            <label><input type="radio" name="decision" value="approve" checked={reviewDecision === "approve"} onChange={() => setReviewDecision("approve")} /> تأیید و تکمیل وظیفه</label>
+                            <label><input type="radio" name="decision" value="reject" checked={reviewDecision === "reject"} onChange={() => setReviewDecision("reject")} /> عدم تأیید و برگشت</label>
+                          </fieldset>
+                        ) : reviewer && !managed && (
                           <label className="flex items-center gap-2 text-sm">
                             <input
                               type="checkbox"
                               name="accept"
-                              defaultChecked={!!reviewStage}
-                              disabled={!!reviewStage}
                             />
                             تأیید تحویل و تکمیل وظیفه
                           </label>
+                        )}
+                        {deliveryReview && reviewDecision === "reject" && (
+                          <Field label="علت عدم تأیید">
+                            <textarea className={input} name="reason" rows={3} maxLength={1500} required />
+                          </Field>
                         )}
                         <p className="text-xs leading-7 text-slate-400">
                           ارسال خروجی با وضعیت «حل شده» ثبت می‌شود؛ تأییدکننده
@@ -498,7 +535,7 @@ export default function TaskDetail() {
                         disabled={isLoading || !operationAllowed}
                         className={button}
                       >
-                        ثبت اطلاعات
+                        {deliveryReview && tab === "delivery" ? "ثبت نتیجه ارزیابی" : "ثبت اطلاعات"}
                       </button>
                     </div>
                   </form>
