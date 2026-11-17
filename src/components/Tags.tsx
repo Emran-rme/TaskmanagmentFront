@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Plus, Search, X } from "lucide-react";
-import { useCreateTagMutation, useTagsQuery, taskTagIndex, type Tag } from "../lib/tags";
+import { Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { useCreateTagMutation, useDeleteTagMutation, useUpdateTagMutation, useTagsQuery, taskTagIndex, type Tag } from "../lib/tags";
 
 function textColor(hex: string) {
   const rgb = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255).map(v => v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
@@ -16,8 +16,11 @@ export function TagBadge({tag}: {tag: Tag}) { return <span className="inline-blo
 export function TagPicker({ value, onChange, create = false }: {value: string[]; onChange: (ids: string[]) => void; create?: boolean}) {
   const { data, isLoading, isError } = useTagsQuery();
   const [createTag, result] = useCreateTagMutation();
+  const [updateTag] = useUpdateTagMutation();
+  const [deleteTag] = useDeleteTagMutation();
   const [name, setName] = useState("");
   const [color, setColor] = useState("#64748b");
+  const [dialog, setDialog] = useState<{type: "edit" | "delete"; tag: Tag; value: string} | null>(null);
   const normalized = (s: string) => s.normalize("NFKC").trim().replace(/[يى]/g, "ی").replace(/ك/g, "ک").replace(/\s+/g, " ").toUpperCase();
   const matching = data?.tags.filter(t => normalized(t.name).includes(normalized(name))) || [];
   const exact = data?.tags.find(t => normalized(t.name) === normalized(name));
@@ -31,6 +34,22 @@ export function TagPicker({ value, onChange, create = false }: {value: string[];
   }
   const selected = data?.tags.filter(t => value.includes(t.id)) || [];
   const available = matching.filter(t => !value.includes(t.id));
+  function edit(tag: Tag) { setDialog({ type: "edit", tag, value: tag.name }); }
+  function remove(tag: Tag) { setDialog({ type: "delete", tag, value: tag.name }); }
+  async function submitDialog() {
+    if (!dialog) return;
+    try {
+      if (dialog.type === "edit") {
+        const nextName = dialog.value.trim();
+        if (!nextName || normalized(nextName) === normalized(dialog.tag.name)) { setDialog(null); return; }
+        await updateTag({ id: dialog.tag.id, name: nextName, color: dialog.tag.color }).unwrap();
+      } else {
+        await deleteTag(dialog.tag.id).unwrap();
+        onChange(value.filter(id => id !== dialog.tag.id));
+      }
+      setDialog(null);
+    } catch { /* shared request handler */ }
+  }
   return (
     <div className="space-y-3">
       {selected.length > 0 && (
@@ -57,12 +76,21 @@ export function TagPicker({ value, onChange, create = false }: {value: string[];
       {isError && <p role="alert" className="text-xs text-rose-600 dark:text-rose-400">دریافت تگ‌ها انجام نشد.</p>}
       {(available.length > 0 || (create && !!name.trim() && !exact && !isLoading && !isError)) && (
         <div className="flex flex-wrap items-center gap-1.5">
-          {available.map(t => <button key={t.id} type="button" onClick={() => onChange([...value, t.id])} className="rounded-full transition-opacity hover:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"><TagBadge tag={t}/></button>)}
+          {available.map(t => <span key={t.id} className="tag-option"><button type="button" onClick={() => onChange([...value, t.id])} className="rounded-full transition-opacity hover:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"><TagBadge tag={t}/></button>{t.canManage && <span className="tag-management"><button type="button" aria-label={`ویرایش ${t.name}`} title="ویرایش تگ" onClick={() => void edit(t)}><Pencil size={12}/></button><button type="button" aria-label={`حذف ${t.name}`} title="حذف تگ" onClick={() => void remove(t)}><Trash2 size={12}/></button></span>}</span>)}
           {create && !!name.trim() && !exact && !isLoading && !isError && (
             <button type="button" disabled={result.isLoading} onClick={() => void add()} className="inline-flex items-center gap-1 rounded-full border border-dashed border-sky-300 px-2.5 py-1 text-xs font-medium text-sky-700 transition hover:bg-sky-50 disabled:opacity-50 dark:border-sky-700 dark:text-sky-300 dark:hover:bg-sky-950/50">
               <Plus size={13} aria-hidden="true" /> ساخت «{name.trim()}»
             </button>
           )}
+        </div>
+      )}
+      {dialog && (
+        <div className="tag-dialog-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setDialog(null); }}>
+          <div className="tag-dialog" role="dialog" aria-modal="true" aria-labelledby="tag-dialog-title">
+            <h3 id="tag-dialog-title">{dialog.type === "edit" ? "ویرایش تگ" : "حذف تگ"}</h3>
+            {dialog.type === "edit" ? <input autoFocus value={dialog.value} onChange={e => setDialog({...dialog, value: e.target.value})} /> : <p>تگ «{dialog.tag.name}» حذف شود؟ اتصال آن به وظایف نیز حذف خواهد شد.</p>}
+            <div className="tag-dialog-actions"><button type="button" onClick={() => setDialog(null)}>انصراف</button><button type="button" className={dialog.type === "delete" ? "danger" : "primary"} onClick={() => void submitDialog()}>تأیید</button></div>
+          </div>
         </div>
       )}
     </div>

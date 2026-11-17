@@ -220,14 +220,6 @@ export default function TaskForm() {
               دارند.
             </p>
             {error && <ErrorBox message={error} />}
-            <fieldset className="form-section" disabled={tagsSaving}><legend>برچسب‌ها</legend><TagPicker value={tagIds} onChange={(next) => {
-              const previous = tagIds;
-              setTagIds(next);
-              if (editing) void setTaskTags({ id: editing.id, tagIds: next }).unwrap().catch((err) => {
-                setTagIds(previous);
-                setError(errorText(err));
-              });
-            }} create />{!editing && <p className="text-xs">برچسب‌ها پس از ثبت وظیفه به آن متصل می‌شوند.</p>}</fieldset>
             <fieldset disabled={isLoading} className="form-section">
               <legend>اطلاعات وظیفه</legend>
               <div className="form-grid">
@@ -556,6 +548,23 @@ export default function TaskForm() {
                       ))}
                   </select>
                 </Field>
+                <div className="form-full task-tags-section">
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <label className="text-sm font-semibold">برچسب‌ها <span className="font-normal text-slate-500 dark:text-slate-400">(اختیاری)</span></label>
+                    {tagsSaving && <span className="text-xs text-slate-500 dark:text-slate-400">در حال ذخیره…</span>}
+                  </div>
+                  <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-700 dark:bg-slate-900/40" aria-label="انتخاب برچسب‌های وظیفه">
+                    <TagPicker value={tagIds} onChange={(next) => {
+                      const previous = tagIds;
+                      setTagIds(next);
+                      if (editing) void setTaskTags({ id: editing.id, tagIds: next }).unwrap().catch((err) => {
+                        setTagIds(previous);
+                        setError(errorText(err));
+                      });
+                    }} create />
+                    {!editing && <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">پس از ثبت وظیفه، برچسب‌ها به آن متصل می‌شوند.</p>}
+                  </div>
+                </div>
               </div>
             </details>
           </div>

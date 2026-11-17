@@ -11,7 +11,8 @@ export const canViewWorkspace = (user: User | null) =>
 
 export function canVisit(user: User | null, path: string): boolean {
   if (!user || user.enabled === false) return false;
-  if (path === "/") return true;
+  if (path === "/") return ["Admin", "Manager"].includes(user.role) && canViewWorkspace(user);
+  if (path === "/inbox") return can(user, "tasks.read");
   if (/^\/dashboard\/?$/.test(path))
     return ["Admin", "Manager"].includes(user.role) && canViewWorkspace(user);
   if (path === "/select-context") return canViewWorkspace(user);
@@ -61,6 +62,7 @@ export function canVisit(user: User | null, path: string): boolean {
 export const firstAllowedPage = (user: User | null) =>
   [
     "/",
+    "/inbox",
     "/tasks",
     "/projects",
     "/notifications",

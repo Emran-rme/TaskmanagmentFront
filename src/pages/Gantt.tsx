@@ -22,7 +22,9 @@ export default function Gantt() {
     ),
     range = max - min;
   const ticks =
-    scale === "week"
+    scale === "day"
+      ? Array.from({ length: Math.floor(range / 86400000) + 1 }, (_, i) => min + i * 86400000)
+      : scale === "week"
       ? Array.from(
           { length: Math.floor(range / (86400000 * 7)) + 1 },
           (_, i) => min + i * 86400000 * 7,
@@ -31,8 +33,8 @@ export default function Gantt() {
           { length: Math.ceil(range / (86400000 * 28)) + 1 },
           (_, i) => +shiftMonth(new Date(min), i),
         ).filter((date) => date <= max);
-  const width = Math.max(900, ticks.length * 120),
-    row = 56;
+  const width = Math.max(900, ticks.length * (scale === "day" ? 88 : 120)),
+    row = 68;
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap justify-between gap-3">
@@ -68,9 +70,9 @@ export default function Gantt() {
         <p className="mb-5 text-xs text-slate-400">
           بازه شروع تا مهلت هر وظیفه؛ بخش پررنگ نشان‌دهنده پیشرفت است.
         </p>
-        <div dir="ltr">
-          <div className="flex">
-            <div className="min-w-0 flex-1 overflow-x-auto">
+        <div dir="rtl" className="overflow-x-auto pb-2">
+          <div className="flex min-w-max flex-row-reverse">
+            <div className="shrink-0" style={{ width }}>
               <svg
                 className="shrink-0"
                 width={width}
@@ -80,7 +82,7 @@ export default function Gantt() {
                 aria-label="خط زمانی وظایف"
               >
                 {ticks.map((date, i) => {
-                  const x = ((date - min) / range) * width;
+                  const x = width - ((date - min) / range) * width;
                   return (
                     <g key={i}>
                       <line
@@ -105,7 +107,7 @@ export default function Gantt() {
                   );
                 })}
                 {tasks.map((t, i) => {
-                  const x = ((+parse(t.start) - min) / range) * width,
+                  const x = width - ((+parse(t.due) - min) / range) * width,
                     bar = Math.max(
                       5,
                       ((+parse(t.due) - +parse(t.start) + 86400000) / range) *
@@ -155,7 +157,7 @@ export default function Gantt() {
               </svg>
             </div>
             <div
-              className="w-40 sm:w-64 shrink-0 border-l bg-slate-50 dark:bg-slate-900/70 text-right"
+              className="w-64 sm:w-80 shrink-0 border-r bg-slate-50 dark:bg-slate-900/70 text-right"
               dir="rtl"
             >
               <div className="flex h-12 items-center px-4 py-3 text-xs font-bold">
@@ -165,7 +167,7 @@ export default function Gantt() {
                 <Link
                   key={t.id}
                   to={"/tasks/" + t.id}
-                  className="flex h-14 items-center border-b px-4 text-xs leading-6 hover:text-brand dark:hover:text-sky-300"
+                  className="flex h-[68px] min-w-0 items-center border-b px-4 text-xs leading-5 whitespace-normal break-words hover:text-brand dark:hover:text-sky-300"
                 >
                   {t.title}
                 </Link>

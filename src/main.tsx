@@ -72,7 +72,8 @@ function App() {
           <Route path="organization" element={<Organization />} />
           <Route path="master" element={<Master />} />
           <Route path="projects/:projectId/*" element={<ProjectWorkspace />} />
-          <Route index element={<MyWork />} />
+          <Route index element={<Dashboard />} />
+          <Route path="inbox" element={<MyWork />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="todos" element={<PersonalTodos />} />
           <Route path="tasks" element={<Tasks />} />

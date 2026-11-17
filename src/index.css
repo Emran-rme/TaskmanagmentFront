@@ -177,6 +177,16 @@ button, input, select, textarea { font: inherit; }
 .quick-caption { color:#8589a5; font-size:12px; margin-left:6px; }
 .quick-caption::before { content:''; display:inline-block; width:7px; height:7px; border-radius:50%; background:#7766c7; margin-left:8px; }
 .reference-tools a,.reference-tools button { display:flex; align-items:center; gap:8px; color:var(--muted); font-size:14px; font-weight:700; padding:8px 12px; }
+.dashboard-picker { display:flex; align-items:center; gap:7px; color:var(--muted); font-size:13px; font-weight:600; padding:6px 10px; border:1px solid var(--border); border-radius:6px; background:var(--surface); }
+.dashboard-picker select { border:0; background:transparent; color:inherit; font:inherit; outline:0; cursor:pointer; }
+.tag-dialog-backdrop { position:fixed; inset:0; z-index:80; display:grid; place-items:center; padding:20px; background:rgba(15,23,42,.45); backdrop-filter:blur(3px); }
+.tag-dialog { width:min(100%,420px); border:1px solid var(--border); border-radius:12px; padding:20px; background:var(--surface); color:var(--text); box-shadow:0 20px 60px rgba(15,23,42,.22); }
+.tag-dialog h3 { margin:0 0 12px; font-size:16px; }
+.tag-dialog input { width:100%; border:1px solid var(--border); border-radius:7px; padding:9px 10px; background:var(--page); color:inherit; }
+.tag-dialog-actions { display:flex; justify-content:flex-start; gap:8px; margin-top:18px; }
+.tag-dialog-actions button { border:1px solid var(--border); border-radius:7px; padding:8px 14px; cursor:pointer; }
+.tag-dialog-actions .primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+.tag-dialog-actions .danger { background:#dc2626; color:#fff; border-color:#dc2626; }
 .reference-content { margin-right:258px; padding:30px 32px 50px; }
 .settings-shortcuts { padding: 17px 20px; border: 1px solid var(--line); border-radius:6px; background: var(--surface); }
 .settings-shortcuts h2 { margin-bottom: 12px; font-size: 13px; font-weight: 500; color: var(--muted); }

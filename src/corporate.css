@@ -23,6 +23,13 @@
   color: #c5d5e0;
   border-inline-end: 1px solid #29475c;
 }
+.reference-brand { justify-content:center; padding-block: 4px 22px; }
+.reference-brand .reference-mark { width: 78px; height: 78px; padding: 8px; border-radius: 18px; }
+.reference-brand .reference-mark img { width: 58px; height: 58px; object-fit: contain; }
+:root:not(.dark) .reference-brand .reference-mark { background:#fff; box-shadow:0 4px 14px rgba(28,73,105,.12); }
+.dark .reference-brand .reference-mark { background:#fff; box-shadow:0 4px 14px rgba(0,0,0,.25); }
+.sidebar-collapsed .reference-brand .reference-mark { width:54px; height:54px; padding:5px; border-radius:14px; }
+.sidebar-collapsed .reference-brand .reference-mark img { width:44px; height:44px; }
 .reference-brand { border-color: #ffffff1f; }
 .reference-brand b { font-size: 15px; line-height: 1.8; }
 .reference-brand small, .reference-sidefoot { color: #a8bfce; }
@@ -153,6 +160,10 @@
 .mywork-row h2 { color:var(--ink); line-height:1.8; overflow-wrap:anywhere; }
 .mywork-row > div:nth-last-child(2) { min-width:135px; }
 .mywork-row:focus-visible { outline:2px solid #5aa1c7; outline-offset:-3px; }
+.tag-option { display:inline-flex; align-items:center; gap:3px; }
+.tag-management { display:inline-flex; gap:1px; padding:2px; border:1px solid var(--line); border-radius:6px; background:var(--surface); }
+.tag-management button { display:grid; place-items:center; width:23px; height:23px; color:var(--muted); border-radius:4px; }
+.tag-management button:hover { color:var(--accent); background:var(--page); }
 @media (max-width:600px) { .mywork-row { padding:14px; gap:12px; } .mywork-row > div:nth-last-child(2) { min-width:0; } .mywork-toolbar > div.relative { width:100%; } }
 
 /* Loading feedback retains the page structure and announces progress. */

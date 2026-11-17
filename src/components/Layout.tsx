@@ -26,7 +26,7 @@ import { RootState, signedOut, api, can, useMutateMutation } from "../store";
 import HeaderMenu from "./HeaderMenu";
 import NotificationListener from "./NotificationListener";
 import { useEffect, useState } from "react";
-import { APP_NAME, BRAND_ICON } from "../lib/branding";
+import { BRAND_ICON } from "../lib/branding";
 import {
   canVisit,
   firstAllowedPage,
@@ -34,6 +34,7 @@ import {
 } from "../lib/navigationAccess";
 const nav = [
   ["/", "میز کار", LayoutDashboard, "work"],
+  ["/inbox", "کارتابل وظایف", ClipboardList, "work"],
   ["/projects", "پروژه‌ها", FolderKanban, "work"],
   ["/tasks", "وظایف", ClipboardList, "work"],
   ["/todos", "کارهای روزانه", CalendarCheck2, "work"],
@@ -112,11 +113,7 @@ export default function Layout() {
       <NotificationListener />
       <aside className="reference-sidebar" aria-label="منوی اصلی">
         <Link to="/" className="reference-brand">
-          <span className="reference-mark hamrah-logo-surface"><img src={BRAND_ICON} alt="نشان همراه" width={44} height={44} /></span>
-          <span>
-            <b>{APP_NAME}</b>
-            <small>مدیریت وظایف و پروژه‌ها</small>
-          </span>
+          <span className="reference-mark hamrah-logo-surface"><img src={BRAND_ICON} alt="نشان همراه" width={58} height={58} /></span>
         </Link>
         <nav id="main-navigation" aria-label="بخش‌های سامانه">
           {visibleNav.map(([path, label, Icon, group], index) => (
@@ -135,11 +132,6 @@ export default function Layout() {
             </Fragment>
           ))}
         </nav>
-        <div className="reference-sidefoot">
-          {APP_NAME}
-          <br />
-          مدیریت یکپارچه وظایف و پروژه‌ها
-        </div>
       </aside>
       <header className="reference-header">
         <div className="reference-header-main">
@@ -148,9 +140,6 @@ export default function Layout() {
               {sidebarCollapsed ? <PanelRightOpen size={19} /> : <PanelRightClose size={19} />}
             </button>
             <div>
-            <p className="reference-crumb">
-              {APP_NAME} <span>/</span> {title}
-            </p>
             <h2>{title}</h2>
             </div>
           </div>
@@ -189,17 +178,6 @@ export default function Layout() {
             )}
           </div>
           <div className="reference-tools">
-            {canVisit(user, "/dashboard") && (
-              <Link
-                to="/dashboard"
-                aria-current={
-                  location.pathname === "/dashboard" ? "page" : undefined
-                }
-              >
-                <LayoutDashboard size={15} />
-                گزارش مدیریتی
-              </Link>
-            )}
             {canVisit(user, "/settings") && (
               <Link to="/settings">
                 <Settings size={14} />
