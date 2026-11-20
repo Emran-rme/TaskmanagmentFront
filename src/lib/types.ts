@@ -8,6 +8,8 @@ export interface User {
   position?: string;
   unit?: string;
   roleNames?: string[];
+  activeRoleName?: string;
+  enforceReferralHierarchy?: boolean;
   id: number;
   username: string;
   name: string;
@@ -37,10 +39,13 @@ export interface Task {
   start: string;
   due: string;
   estimate: number;
+  weight: number;
   source: string;
   priority: string;
   status: string;
   progress: number;
+  weightedProgress?: number | null;
+  relativeWeightShare?: number | null;
   description: string;
   expectedOutput: string;
   deliveredOutput: string;
@@ -87,6 +92,7 @@ export interface TaskHistory {
   changesJson?: string;
 }
 export interface Project {
+  weightedProgress?: number;
   requestSources?: string[];
   company: string;
   unit: string;
@@ -118,6 +124,7 @@ export interface Settings {
   approval: boolean;
 }
 export interface Workspace {
+  taskCreators?: Record<string, number>;
   projectPermissions?: Record<string, string[]>;
   projectMembers?: { projectId: string; userId: number; roleId: string }[];
   organization?: {
@@ -176,7 +183,7 @@ export interface DashboardData {
   >[];
   projects: Pick<
     Project,
-    "id" | "name" | "company" | "unit" | "managerId" | "start" | "status"
+    "id" | "name" | "company" | "unit" | "managerId" | "start" | "status" | "weightedProgress"
   >[];
   users: User[];
 }

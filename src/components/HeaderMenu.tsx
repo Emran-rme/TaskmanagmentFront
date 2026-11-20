@@ -57,6 +57,7 @@ export default function HeaderMenu({
       <button
         ref={trigger}
         type="button"
+        aria-label={`حساب کاربری ${user?.name || ""}`}
         aria-expanded={open}
         aria-controls="header-options"
         onClick={() => setOpen((v) => !v)}
@@ -84,7 +85,7 @@ export default function HeaderMenu({
           <div className="mb-2 border-b border-slate-100 px-3 py-3 dark:border-slate-700">
             <p className="font-bold">{user?.name}</p>
             <p className="mt-1 text-xs text-slate-500">
-              {({ Admin: "مدیر سامانه", Manager: "مدیر", Member: "کارشناس", Viewer: "مشاهده‌گر" } as Record<string, string>)[user?.role || ""]}
+              {user?.activeRoleName || ({ Admin: "مدیر سامانه", Manager: "مدیر", Member: "کارشناس", Viewer: "مشاهده‌گر" } as Record<string, string>)[user?.role || ""]}
               {" · "}{user?.company === "*" ? "کل گروه" : user?.company}
             </p>
             <p className="mt-1 text-xs text-slate-500">

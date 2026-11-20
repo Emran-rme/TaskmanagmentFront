@@ -1,8 +1,11 @@
 import { useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
-import { RootState, useNoticesQuery, can } from "../store";
+import { RootState, useNoticesQuery, useWorkspaceQuery, can } from "../store";
+import { notificationTarget } from "../lib/notificationTarget";
+import { notificationContent } from "../lib/notificationContent";
 export default function NotificationListener() {
   const user = useSelector((s: RootState) => s.auth.user);
+  const { data: workspace } = useWorkspaceQuery(undefined, { skip: !user });
   const { data: notices } = useNoticesQuery(undefined, {
     skip: !can(user, "notifications.read"),
     pollingInterval: 30000,
@@ -36,16 +39,18 @@ export default function NotificationListener() {
       navigator.serviceWorker?.ready
         .then(async (r) => {
           if (await r.pushManager.getSubscription()) return;
-          for (const n of fresh)
-            await r.showNotification("میز کار", {
-              body: "اعلان جدید دارید؛ برای مشاهده وارد سامانه شوید.",
+          for (const n of fresh) {
+            const { title, body } = notificationContent(n, workspace?.tasks.find(task => task.id === n.taskId)?.title);
+            await r.showNotification(title, {
+              body,
               tag: n.id,
               icon: "/branding/hamrah-symbol.png",
-              data: { url: "/notifications" },
+              data: { url: notificationTarget(n) || "/notifications" },
             });
+          }
         })
         .catch(console.error);
     }
-  }, [notices, user?.id]);
+  }, [notices, user?.id, workspace]);
   return null;
 }
