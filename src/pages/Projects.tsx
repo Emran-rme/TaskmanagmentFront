@@ -63,7 +63,14 @@ export default function Projects() {
     if (error) contentRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, [error]);
   if (!w) return <Loading />;
-  const organization = w.organization || [];
+  const organization = [...(w.organization || [])];
+  // Some workspace responses omit company nodes from the organization tree.
+  // The server-provided company list remains the source of allowed companies.
+  for (const name of w.companies) {
+    if (!organization.some((node) => node.name === name && ["شرکت مادر", "شرکت تابعه"].includes(node.type))) {
+      organization.push({ id: `company:${name}`, name, type: "شرکت تابعه" });
+    }
+  }
   const byId = new Map(organization.map((node) => [node.id, node]));
   const isCompany = (type: string) =>
     ["شرکت مادر", "شرکت تابعه"].includes(type);
@@ -205,6 +212,11 @@ export default function Projects() {
                     value={company}
                     onChange={setCompany}
                   />
+                  {!companyIds.length && (
+                    <p role="status" className="text-sm text-slate-500 dark:text-slate-400">
+                      شرکتی برای ایجاد پروژه در محدوده دسترسی شما یافت نشد. شرکت فعال و سطح دسترسی خود را بررسی کنید.
+                    </p>
+                  )}
                   <OrganizationTreeSelect
                     key={company}
                     label="معاونت / واحد"

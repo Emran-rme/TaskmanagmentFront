@@ -81,7 +81,7 @@ export default function MyWork() {
   const current = Math.min(page, pages);
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-sky-200 bg-gradient-to-l from-sky-50 via-white to-indigo-50 p-6 dark:border-slate-700 dark:from-slate-800 dark:via-slate-900 dark:to-indigo-950">
+      <section className="mywork-hero rounded-2xl border border-sky-200 bg-gradient-to-l from-sky-50 via-white to-indigo-50 p-6 dark:border-slate-700 dark:from-slate-800 dark:via-slate-900 dark:to-indigo-950">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="mb-2 text-sm text-slate-500 dark:text-slate-400">
@@ -101,7 +101,7 @@ export default function MyWork() {
             <ListTodo size={16} /> ثبت کار روزانه
           </Link>
         </div>
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+        <div className="mywork-summary mt-6 grid gap-3 sm:grid-cols-3">
           {[
             ["all", "کار باز", data.total, ListTodo],
             ["reviews", "منتظر بررسی شما", reviews, ClipboardCheck],

@@ -186,3 +186,41 @@
 @keyframes loading-spin { to { transform:rotate(360deg); } }
 @keyframes loading-pulse { 50% { opacity:.45; } }
 @media (prefers-reduced-motion:reduce) { .loading-spinner, .loading-skeleton span { animation:none; } }
+
+/* Compact navigation and task inbox on small screens. */
+@media (max-width: 767px) {
+  .reference-sidebar { padding:6px 10px; }
+  .reference-brand { display:none; }
+  .reference-sidebar nav,
+  .sidebar-collapsed .reference-sidebar nav { display:flex; margin:0; padding:0 0 3px; gap:4px; overflow-x:auto; overscroll-behavior-inline:contain; scrollbar-width:thin; }
+  .reference-sidebar nav a { flex:none; min-height:44px; padding:8px 10px; gap:7px; white-space:nowrap; font-size:12px; }
+  .reference-nav-separator { flex:none; align-self:stretch; width:1px; margin:7px 4px; }
+  .sidebar-toggle { display:none; }
+  .reference-header-main { min-height:60px; flex-wrap:nowrap; gap:8px; padding:8px 12px; }
+  .reference-heading { flex:1; min-width:0; }
+  .reference-header h2, .reference-shell:has(.reference-dashboard) .reference-header-main h2 { font-size:16px; }
+  .reference-profile { width:auto; flex:none; }
+  .reference-profile > div.relative > button { min-height:44px; padding:5px 7px; }
+  .reference-toolbar { min-height:0; gap:4px 8px; padding:6px 12px; }
+  .reference-quick { flex:1 1 auto; flex-wrap:wrap; gap:6px; }
+  .reference-quick .ui-button, .reference-quick .ui-secondary { padding:7px 9px; gap:5px; font-size:12px; white-space:nowrap; }
+  .reference-tools { width:auto; justify-content:flex-end; gap:0; }
+  .reference-tools a, .reference-tools button { justify-content:center; min-width:44px; min-height:44px; padding:8px; font-size:0; }
+  .reference-content { padding:14px 12px 28px; }
+  .mywork-hero { padding:16px; }
+  .mywork-hero h1 { font-size:20px; }
+  .mywork-summary { grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; margin-top:16px; }
+  .mywork-summary button { align-items:flex-start; flex-direction:column; gap:5px; min-width:0; padding:10px 8px; }
+  .mywork-summary button span { display:block; font-size:11px; line-height:1.6; overflow-wrap:anywhere; }
+  .mywork-toolbar { gap:10px; padding:12px; }
+  .mywork-toolbar > div[aria-label] { order:2; flex-wrap:nowrap; max-width:100%; overflow-x:auto; padding-bottom:3px; }
+  .mywork-toolbar > div[aria-label] button { flex:none; min-height:44px; white-space:nowrap; }
+  .mywork-toolbar > div.relative { order:1; width:100%; min-width:0; }
+  .mywork-toolbar > div.relative input { min-height:44px; }
+  .mywork-toolbar > div.flex.w-full { order:3; }
+  .mywork-row { display:grid; grid-template-columns:44px minmax(0,1fr); gap:8px 12px; padding:14px; }
+  .mywork-row > span:first-child { align-self:start; padding:11px; }
+  .mywork-row > div:nth-child(2) { min-width:0; }
+  .mywork-row > div:nth-last-child(2) { grid-column:2; min-width:0; }
+  .mywork-row > span:last-child { grid-column:2; }
+}
